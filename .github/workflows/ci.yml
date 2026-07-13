@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [master, dev]
     tags: ['v*']
   pull_request:
-    branches: [main]
+    branches: [master, dev]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,7 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:check
-      - run: npm run format:check
+      - run: npx prettier --check "src/**/*.ts"
 
   typecheck:
     name: Type Check & Build
