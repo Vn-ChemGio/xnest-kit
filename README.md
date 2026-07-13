@@ -1,98 +1,208 @@
 <p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
+  <a href="https://github.com/Vn-ChemGio/xnest-kit" target="blank">
+    <img src="https://nestjs.com/img/logo-small.svg" width="120" alt="NestJS Logo" />
+  </a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
+<p align="center">
+  <a href="https://www.npmjs.com/package/xnest-kit" target="_blank">
+    <img src="https://img.shields.io/npm/v/xnest-kit.svg" alt="NPM Version" />
+  </a>
+  <a href="https://www.npmjs.com/package/xnest-kit" target="_blank">
+    <img src="https://img.shields.io/npm/l/xnest-kit.svg" alt="Package License" />
+  </a>
+  <a href="https://www.npmjs.com/package/xnest-kit" target="_blank">
+    <img src="https://img.shields.io/npm/dm/xnest-kit.svg" alt="NPM Downloads" />
+  </a>
+  <a href="https://github.com/Vn-ChemGio/xnest-kit/actions" target="_blank">
+    <img src="https://github.com/Vn-ChemGio/xnest-kit/actions/workflows/ci.yml/badge.svg" alt="CI" />
+  </a>
+  <a href="https://github.com/Vn-ChemGio/xnest-kit" target="_blank">
+    <img src="https://img.shields.io/github/stars/Vn-ChemGio/xnest-kit?style=social" alt="GitHub Stars" />
+  </a>
 </p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
 
-## Description
+<p align="center">
+  A modular, production-ready <a href="https://nestjs.com" target="_blank">NestJS</a> toolkit — Bootstrap, Auth, SaaS, and Infrastructure integrations in a single package.
+</p>
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+---
 
-## Project setup
+## Features
 
-```bash
-$ npm install
-```
+| Module | Description | Status |
+|--------|-------------|--------|
+| [openapi](./src/openapi) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
+| [cache](./src/cache) | CacheManager with Redis/Valkey | ![](https://img.shields.io/badge/alpha-orange) |
+| [typeorm](./src/typeorm) | TypeORM config & entity decorators | ![](https://img.shields.io/badge/alpha-orange) |
+| [queue](./src/queue) | BullMQ config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
+| [validation](./src/validation) | Request validation with i18n | ![](https://img.shields.io/badge/alpha-orange) |
+| [notification](./src/notification) | Multi-adapter notifications | ![](https://img.shields.io/badge/alpha-orange) |
+| [activity-feed](./src/activity-feed) | Activity tracking | ![](https://img.shields.io/badge/alpha-orange) |
+| [audit-log](./src/audit-log) | Audit logging | ![](https://img.shields.io/badge/alpha-orange) |
+| [logger](./src/logger) | Enhanced logging | ![](https://img.shields.io/badge/alpha-orange) |
+| [metrics](./src/metrics) | Prometheus metrics | ![](https://img.shields.io/badge/alpha-orange) |
+| [rate-limit](./src/rate-limit) | Rate limiting | ![](https://img.shields.io/badge/alpha-orange) |
+| [storage](./src/storage) | S3/GCS/Azure storage | ![](https://img.shields.io/badge/alpha-orange) |
+| [stripe](./src/stripe) | Stripe integration | ![](https://img.shields.io/badge/alpha-orange) |
+| [webhook](./src/webhook) | Webhook handling | ![](https://img.shields.io/badge/alpha-orange) |
+| [excel](./src/excel) | Excel file processing | ![](https://img.shields.io/badge/alpha-orange) |
 
-## Compile and run the project
+## Tech Stack
 
-```bash
-# development
-$ npm run start
+<p align="center">
+  <img src="https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white" alt="NestJS" />
+  <img src="https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Node.js-339933?logo=node.js&logoColor=white" alt="Node.js" />
+  <img src="https://img.shields.io/badge/Redis-DC382D?logo=redis&logoColor=white" alt="Redis" />
+  <img src="https://img.shields.io/badge/TypeORM-FE0803?logo=typeorm&logoColor=white" alt="TypeORM" />
+  <img src="https://img.shields.io/badge/BullMQ-FF6B6B?logo=bullmq&logoColor=white" alt="BullMQ" />
+  <img src="https://img.shields.io/badge/Swagger-85EA2D?logo=swagger&logoColor=white" alt="Swagger" />
+</p>
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
-```
-
-## Run tests
-
-```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
-```
-
-## Deployment
-
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Installation
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install xnest-kit
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+## Quick Start
 
-## Resources
+### Import all modules
 
-Check out a few resources that may come in handy when working with NestJS:
+```typescript
+import { configOpenApi, configCache, configTypeOrm } from 'xnest-kit';
+```
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+### Import specific module (recommended for tree-shaking)
 
-## Support
+```typescript
+import { configOpenApi } from 'xnest-kit/openapi';
+import { configCache } from 'xnest-kit/cache';
+import { configTypeOrm } from 'xnest-kit/typeorm';
+import { configQueue } from 'xnest-kit/queue';
+import { configValidation } from 'xnest-kit/validation';
+import { configNotification } from 'xnest-kit/notification';
+import { configExcel } from 'xnest-kit/excel';
+```
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+## Usage Examples
 
-## Stay in touch
+### OpenAPI (Swagger/Scalar)
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```typescript
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { configOpenApi } from 'xnest-kit/openapi';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  configOpenApi(app, {
+    title: 'My API',
+    description: 'API documentation',
+    version: '1.0.0',
+    // Choose between 'swagger' or 'scalar'
+    provider: 'swagger',
+  });
+  await app.listen(3000);
+}
+bootstrap();
+```
+
+### Cache with Redis
+
+```typescript
+import { configCache } from 'xnest-kit/cache';
+
+configCache(app, {
+  store: 'redis',
+  host: 'localhost',
+  port: 6379,
+  ttl: 60,
+});
+```
+
+### TypeORM
+
+```typescript
+import { configTypeOrm } from 'xnest-kit/typeorm';
+
+configTypeOrm(app, {
+  type: 'postgres',
+  host: 'localhost',
+  port: 5432,
+  database: 'mydb',
+  entities: [__dirname + '/**/*.entity{.ts,.js}'],
+  synchronize: true,
+});
+```
+
+### Excel Processing
+
+```typescript
+import { parseExcel, generateExcel } from 'xnest-kit/excel';
+
+// Parse uploaded Excel
+const data = await parseExcel(file.buffer);
+
+// Generate Excel for download
+const buffer = await generateExcel(data, {
+  sheetName: 'Users',
+  columns: ['id', 'name', 'email'],
+});
+```
+
+## Requirements
+
+- Node.js >= 18
+- NestJS >= 10.0.0
+
+## Peer Dependencies
+
+| Package | Version |
+|---------|---------|
+| `@nestjs/common` | `>=10.0.0` |
+| `@nestjs/core` | `>=10.0.0` |
+| `reflect-metadata` | `>=0.1.0` |
+| `rxjs` | `>=7.0.0` |
+
+## Development
+
+```bash
+# Install dependencies
+npm install
+
+# Build
+npm run build
+
+# Lint
+npm run lint
+
+# Test
+npm run test
+
+# Test with coverage
+npm run test:cov
+```
+
+## Contributing
+
+Contributions are welcome! Please read our [Contributing Guide](./CONTRIBUTING.md) before submitting a Pull Request.
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for a history of notable changes.
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+This project is licensed under the MIT License - see the [LICENSE](./LICENSE) file for details.
+
+## Author
+
+**Wind Blade** - [vn.chemgio@yahoo.com](mailto:vn.chemgio@yahoo.com)
+
+## Links
+
+- [GitHub Repository](https://github.com/Vn-ChemGio/xnest-kit)
+- [Issue Tracker](https://github.com/Vn-ChemGio/xnest-kit/issues)
+- [NPM Package](https://www.npmjs.com/package/xnest-kit)

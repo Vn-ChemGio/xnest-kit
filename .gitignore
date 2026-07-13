@@ -14,6 +14,7 @@ lerna-debug.log*
 
 # OS
 .DS_Store
+Thumbs.db
 
 # Tests
 /coverage
@@ -54,3 +55,20 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Docs
+docs/node_modules
+docs/.deps
+
+# Build artifacts
+*.tsbuildinfo
+
+# Husky
+.husky/_*
+
+# npm
+.npmrc
+
+# Package locks (keep package-lock.json)
+# pnpm-lock.yaml
+# yarn.lock
