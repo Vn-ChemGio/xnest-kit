@@ -1,0 +1,98 @@
+# LLM.txt - Project Context for Large Language Models
+
+## Project Identity
+
+- **Name**: xnest-kit
+- **Type**: npm package (library/toolkit)
+- **Framework**: NestJS (Node.js)
+- **Language**: TypeScript
+- **Version**: 0.0.1-alpha.0
+- **License**: MIT
+- **Author**: Wind Blade <vn.chemgio@yahoo.com>
+
+## Purpose
+
+xnest-kit is a modular, production-ready NestJS toolkit that provides 15 feature modules for common integrations and utilities. It simplifies NestJS development by offering pre-built configurations, decorators, and services.
+
+## Architecture
+
+- **Package type**: npm library (not an application)
+- **Module system**: CommonJS + ESM support
+- **Build**: TypeScript compiler (tsc)
+- **Test**: Jest
+- **Lint**: ESLint + Prettier
+- **Git hooks**: Husky + Commitlint
+
+## Feature Modules
+
+1. **openapi** - Swagger/Scalar configuration and decorators
+2. **cache** - CacheManager with Redis/Valkey support
+3. **typeorm** - TypeORM configuration and entity decorators
+4. **queue** - BullMQ configuration and decorators
+5. **validation** - Request validation with i18n
+6. **notification** - Multi-adapter notifications (email, SMS, push)
+7. **activity-feed** - Activity tracking
+8. **audit-log** - Audit logging
+9. **logger** - Enhanced logging
+10. **metrics** - Prometheus metrics
+11. **rate-limit** - Rate limiting
+12. **storage** - Cloud storage (S3, GCS, Azure)
+13. **stripe** - Stripe payment integration
+14. **webhook** - Webhook handling
+15. **excel** - Excel file processing
+
+## Import Patterns
+
+```typescript
+// Full import
+import { configOpenApi } from 'xnest-kit';
+
+// Sub-module import (recommended)
+import { configOpenApi } from 'xnest-kit/openapi';
+```
+
+## Development Workflow
+
+1. Create feature branch from `dev`
+2. Implement changes with tests
+3. Run `npm run lint:check && npm run build && npm run test`
+4. Commit using conventional commits
+5. Create PR to `dev`
+6. After merge, create release tag for npm publish
+
+## Key Files
+
+- `package.json` - Package configuration with exports map
+- `tsconfig.json` - TypeScript configuration
+- `eslint.config.mjs` - ESLint rules
+- `.prettierrc` - Prettier settings
+- `commitlint.config.js` - Commit message rules
+- `.github/workflows/` - CI/CD pipelines
+
+## Conventions
+
+- Use JSDoc for all public APIs
+- Write tests for all implemented features
+- Follow conventional commits
+- English for code and documentation
+- Co-locate tests with source files
+- Use `*.spec.ts` suffix for test files
+
+## Dependencies
+
+### Peer Dependencies (required by users)
+- `@nestjs/common` >= 10.0.0
+- `@nestjs/core` >= 10.0.0
+- `reflect-metadata` >= 0.1.0
+- `rxjs` >= 7.0.0
+
+### Dev Dependencies (for development)
+- TypeScript, Jest, ESLint, Prettier
+- Husky, Commitlint, lint-staged
+
+## Publishing
+
+- **npm**: `xnest-kit`
+- **Registry**: https://registry.npmjs.org
+- **Tags**: `latest` (stable), `next` (alpha/beta/rc)
+- **Trigger**: Push version tag (e.g., `v0.1.0-alpha.1`)
