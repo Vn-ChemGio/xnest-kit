@@ -2,10 +2,10 @@ name: CI
 
 on:
   push:
-    branches: [master, dev]
+    branches: [main]
     tags: ['v*']
   pull_request:
-    branches: [master, dev]
+    branches: [main]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -26,7 +26,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run lint:check
-      - run: npx prettier --check "src/**/*.ts"
+      - run: npm run format:check
 
   typecheck:
     name: Type Check & Build
@@ -65,13 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '24'
           registry-url: https://registry.npmjs.org/
 
       - run: npm ci
@@ -93,17 +93,4 @@ jobs:
 
       - run: npm publish --provenance --tag ${{ steps.dist-tag.outputs.tag }}
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          generate_release_notes: true
-          body: |
-            ## Installation
 
-            ```bash
-            npm install xnest-kit@${{ github.ref_name }}
-            ```
-
-            ## Documentation
-
-            See [README](https://github.com/Vn-ChemGio/xnest-kit#readme) for usage details.
