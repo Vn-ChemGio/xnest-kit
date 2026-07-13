@@ -72,6 +72,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+          registry-url: https://registry.npmjs.org/
+
+      # Remove _authToken from .npmrc so npm uses OIDC instead
+      - run: sed -i '/_authToken/d' ~/.npmrc
 
       - run: npm ci
 
@@ -90,7 +94,7 @@ jobs:
             echo "tag=latest" >> "$GITHUB_OUTPUT"
           fi
 
-      - run: npm publish --provenance --registry https://registry.npmjs.org/ --tag ${{ steps.dist-tag.outputs.tag }}
+      - run: npm publish --provenance --tag ${{ steps.dist-tag.outputs.tag }}
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
