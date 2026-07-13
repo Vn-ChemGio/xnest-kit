@@ -65,13 +65,13 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
-      contents: read
+      contents: write
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: '24'
+          node-version: ${{ env.NODE_VERSION }}
           registry-url: https://registry.npmjs.org/
 
       - run: npm ci
@@ -93,4 +93,17 @@ jobs:
 
       - run: npm publish --provenance --tag ${{ steps.dist-tag.outputs.tag }}
 
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          body: |
+            ## Installation
 
+            ```bash
+            npm install xnest-kit@${{ github.ref_name }}
+            ```
+
+            ## Documentation
+
+            See [README](https://github.com/Vn-ChemGio/xnest-kit#readme) for usage details.
