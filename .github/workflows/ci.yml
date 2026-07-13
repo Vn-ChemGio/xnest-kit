@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: 20
+  NODE_VERSION: 24
 
 jobs:
   lint:
@@ -73,9 +73,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           registry-url: https://registry.npmjs.org/
-
-      # Remove _authToken from .npmrc so npm uses OIDC instead
-      - run: sed -i '/_authToken/d' ~/.npmrc
 
       - run: npm ci
 
