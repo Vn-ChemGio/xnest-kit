@@ -17,16 +17,19 @@ jest.mock('@nestjs/swagger', () => {
     build: jest.fn().mockReturnValue({ openapi: '3.0.0', info: {}, paths: {} }),
   };
 
+  const doc = {
+    openapi: '3.0.0',
+    info: { title: 'API', version: '1.0.0' },
+    paths: {} as Record<string, unknown>,
+  };
+
   return {
     DocumentBuilder: jest.fn(() => builder),
     SwaggerModule: {
-      createDocument: jest.fn().mockReturnValue({
-        openapi: '3.0.0',
-        info: { title: 'API', version: '1.0.0' },
-        paths: {},
-      }),
+      createDocument: jest.fn(() => doc),
       setup: jest.fn(),
     },
+    __doc: doc,
   };
 });
 
@@ -34,6 +37,24 @@ const mockUse = jest.fn();
 const mockApp = {
   use: mockUse,
 } as unknown as INestApplication;
+
+/**
+ * Access the mock's internal document object.
+ * Since `configSwagger` mutates `paths` on the returned doc,
+ * this gives us direct access to the same object.
+ */
+function getDoc() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const mod = require('@nestjs/swagger') as {
+    __doc: {
+      paths: Record<
+        string,
+        Record<string, { responses?: Record<string, unknown> }>
+      >;
+    };
+  };
+  return mod.__doc;
+}
 
 function getSwaggerModule() {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -61,6 +82,7 @@ describe('configSwagger', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     (isPackageInstalled as jest.Mock).mockReturnValue(false);
+    getDoc().paths = {};
   });
 
   it('should use default options', () => {
@@ -300,5 +322,288 @@ describe('configSwagger', () => {
     expect(doc.openapi).toBe('3.0.0');
     expect(doc.info).toBeDefined();
     expect(doc.paths).toBeDefined();
+  });
+
+  describe('defaultResponses', () => {
+    it('should apply default responses with full options', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: { responses: {} },
+        post: { responses: {} },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          409: {
+            description: 'Conflict',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    statusCode: { type: 'number', example: 409 },
+                  },
+                },
+              },
+            },
+          },
+          500: {
+            description: 'Internal server error',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  properties: {
+                    statusCode: { type: 'number', example: 500 },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses).toEqual({
+        '409': {
+          description: 'Conflict',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { statusCode: { type: 'number', example: 409 } },
+              },
+            },
+          },
+        },
+        '500': {
+          description: 'Internal server error',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: { statusCode: { type: 'number', example: 500 } },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should auto-generate body when value is true', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: { responses: {} },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          500: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses).toEqual({
+        '500': {
+          description: 'Internal Server Error',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  statusCode: { type: 'number', example: 500 },
+                  message: { type: 'string', example: 'Internal Server Error' },
+                  error: { type: 'string', example: 'Internal Server Error' },
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should auto-generate body for known statuses with true', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: { responses: {} },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          409: true,
+          500: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses['409']).toEqual({
+        description: 'Conflict',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: { type: 'number', example: 409 },
+                message: { type: 'string', example: 'Conflict' },
+                error: { type: 'string', example: 'Conflict' },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should not overwrite existing responses with body', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: {
+          responses: {
+            '409': {
+              description: 'Already set',
+              content: {
+                'application/json': {
+                  schema: { type: 'string', example: 'custom' },
+                },
+              },
+            },
+          },
+        },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          409: true,
+          500: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses['409']).toEqual({
+        description: 'Already set',
+        content: {
+          'application/json': {
+            schema: { type: 'string', example: 'custom' },
+          },
+        },
+      });
+      expect(doc.paths['/users'].get.responses['500']).toEqual({
+        description: 'Internal Server Error',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: { type: 'number', example: 500 },
+                message: { type: 'string', example: 'Internal Server Error' },
+                error: { type: 'string', example: 'Internal Server Error' },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should merge auto-generated body into existing response without body', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: {
+          responses: {
+            '500': { description: 'Internal Server Error' },
+          },
+        },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          500: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses).toEqual({
+        '500': {
+          description: 'Internal Server Error',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  statusCode: { type: 'number', example: 500 },
+                  message: { type: 'string', example: 'Internal Server Error' },
+                  error: { type: 'string', example: 'Internal Server Error' },
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should not apply auto401 as a response', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: { responses: {} },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          401: true,
+          auto401: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses['401']).toEqual({
+        description: 'Unauthorized',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              properties: {
+                statusCode: { type: 'number', example: 401 },
+                message: { type: 'string', example: 'Unauthorized' },
+                error: { type: 'string', example: 'Unauthorized' },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should generate body for unknown status with true', () => {
+      const doc = getDoc();
+      doc.paths['/users'] = {
+        get: { responses: {} },
+      };
+
+      configSwagger(mockApp, {
+        defaultResponses: {
+          999: true,
+        },
+      });
+
+      expect(doc.paths['/users'].get.responses).toEqual({
+        '999': {
+          description: 'Error 999',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  statusCode: { type: 'number', example: 999 },
+                  message: { type: 'string', example: 'Error 999' },
+                  error: { type: 'string', example: 'Error 999' },
+                },
+              },
+            },
+          },
+        },
+      });
+    });
+
+    it('should not apply when no paths exist', () => {
+      configSwagger(mockApp, {
+        defaultResponses: {
+          500: true,
+        },
+      });
+
+      const doc = getDoc();
+      expect(doc.paths).toEqual({});
+    });
   });
 });

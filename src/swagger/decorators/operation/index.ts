@@ -1,5 +1,4 @@
-// TODO: Add custom operation decorators here when needed.
-// Currently re-exports directly from @nestjs/swagger.
+export { ApiResponses } from './api-responses';
 
 export {
   ApiOperation,
