@@ -5,7 +5,7 @@
   - [Quick Start](/guide/quick-start.md)
   - [Configuration](/guide/configuration.md)
 - [API Reference](/api/)
-  - [openapi](/api/openapi.md)
+  - [swagger](/api/openapi.md)
   - [cache](/api/cache.md)
   - [typeorm](/api/typeorm.md)
   - [queue](/api/queue.md)

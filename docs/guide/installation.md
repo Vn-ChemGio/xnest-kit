@@ -29,7 +29,7 @@ npm install @nestjs/common @nestjs/core reflect-metadata rxjs
 ## Verify Installation
 
 ```typescript
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 console.log('xnest-kit installed successfully');
 ```
 

@@ -37,9 +37,9 @@ xnest-kit is a modular NestJS toolkit published as an npm package. It provides 1
  * @returns void
  *
  * @example
- * configOpenApi(app, { title: 'My API' });
+ * configSwagger(app, { title: 'My API' });
  */
-export function configOpenApi(app: INestApplication, options: OpenApiOptions): void {
+export function configSwagger(app: INestApplication, options: SwaggerOptions): void {
   // Implementation
 }
 ```
@@ -53,14 +53,14 @@ export function configOpenApi(app: INestApplication, options: OpenApiOptions): v
 - **Pattern**: AAA (Arrange, Act, Assert)
 
 ```typescript
-describe('configOpenApi', () => {
+describe('configSwagger', () => {
   it('should configure Swagger documentation', () => {
     // Arrange
     const app = createMock<INestApplication>();
     const options = { title: 'Test API' };
 
     // Act
-    configOpenApi(app, options);
+    configSwagger(app, options);
 
     // Assert
     expect(mockSwagger.setup).toHaveBeenCalled();
@@ -79,7 +79,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
 Available Scopes (feature module names):
-`root`, `openapi`, `cache`, `typeorm`, `queue`, `validation`, `notification`, `activity-feed`, `audit-log`, `logger`, `metrics`, `rate-limit`, `storage`, `stripe`, `webhook`, `excel`
+`root`, `swagger`, `cache`, `typeorm`, `queue`, `validation`, `notification`, `activity-feed`, `audit-log`, `logger`, `metrics`, `rate-limit`, `storage`, `stripe`, `webhook`, `excel`
 
 Use `root` scope for root-level changes (package.json, tsconfig, CI, etc.)
 

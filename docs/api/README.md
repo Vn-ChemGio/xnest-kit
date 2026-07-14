@@ -8,7 +8,7 @@ xnest-kit provides 15 feature modules, each with its own set of utilities and co
 
 | Module | Description | Import |
 |--------|-------------|--------|
-| [openapi](/api/openapi) | Swagger/Scalar config & decorators | `xnest-kit/openapi` |
+| [swagger](/api/openapi) | Swagger/Scalar config & decorators | `xnest-kit/swagger` |
 | [cache](/api/cache) | CacheManager with Redis/Valkey | `xnest-kit/cache` |
 | [typeorm](/api/typeorm) | TypeORM config & entity decorators | `xnest-kit/typeorm` |
 | [queue](/api/queue) | BullMQ config & decorators | `xnest-kit/queue` |
@@ -27,11 +27,11 @@ xnest-kit provides 15 feature modules, each with its own set of utilities and co
 ## Import All
 
 ```typescript
-import { configOpenApi, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
 ```
 
 ## Import Individual Module
 
 ```typescript
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 ```

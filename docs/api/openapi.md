@@ -1,4 +1,4 @@
-# openapi
+# swagger
 
 > Swagger/Scalar configuration and decorators for NestJS
 
@@ -15,10 +15,10 @@ npm install xnest-kit
 ## Usage
 
 ```typescript
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 
 const app = await NestFactory.create(AppModule);
-configOpenApi(app, {
+configSwagger(app, {
   title: 'My API',
   description: 'API documentation',
   version: '1.0.0',
@@ -28,7 +28,7 @@ configOpenApi(app, {
 
 ## API
 
-### configOpenApi(app, options)
+### configSwagger(app, options)
 
 Configure OpenAPI documentation for a NestJS application.
 

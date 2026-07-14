@@ -10,7 +10,7 @@
  */
 const SCOPES = [
   'root',
-  'openapi',
+  'swagger',
   'cache',
   'typeorm',
   'queue',
