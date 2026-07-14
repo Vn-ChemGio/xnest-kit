@@ -72,16 +72,16 @@ describe('class-validator integration', () => {
     expect(errors3.length).toBe(1);
   });
 
-  it('should NOT apply @IsOptional() when required is omitted', async () => {
+  it('should apply @IsOptional() when required is omitted (defaults to false)', async () => {
     class TestRequired {
       @ApiProperty({ format: 'email' })
       email!: string;
     }
 
-    // undefined should fail (required by default)
+    // undefined should pass (optional by default)
     const instance = new TestRequired();
     const errors = await validate(instance);
-    expect(errors.length).toBe(1);
+    expect(errors.length).toBe(0);
   });
 
   it('should handle address formats', () => {

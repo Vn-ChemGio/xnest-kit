@@ -1,4 +1,4 @@
-import { isPackageInstalled } from '../../../utils';
+import { isPackageInstalled } from '../../../../utils';
 
 type ValidatorDecorator = PropertyDecorator;
 

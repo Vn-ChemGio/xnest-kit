@@ -1,7 +1,12 @@
 import { ApiProperty as NestApiProperty } from '@nestjs/swagger';
 import type { ApiPropertyOptions } from '@nestjs/swagger';
-import { getFormatExample } from './format-examples';
-import { getValidatorDecorators } from './format-validators';
+import { getFormatExample } from './shared/format-examples';
+import { getValidatorDecorators } from './shared/format-validators';
+import type {
+  StringFormat,
+  NumberFormat,
+  BooleanFormat,
+} from './shared/format-types';
 
 /**
  * Base options shared by all overloads.
@@ -10,162 +15,6 @@ import { getValidatorDecorators } from './format-validators';
 type BaseProps = Omit<ApiPropertyOptions, 'type' | 'format' | 'required'> & {
   required?: boolean;
 };
-
-// ─── Format type unions ──────────────────────────────────────────
-
-/**
- * String formats — property type must be `String` (or omitted, defaults to string).
- */
-export type StringFormat =
-  // Identity
-  | 'uuid'
-  | 'uuid-v1'
-  | 'uuid-v4'
-  | 'mongo'
-  | 'ulid'
-  // User Info
-  | 'first-name'
-  | 'last-name'
-  | 'full-name'
-  | 'username'
-  | 'nickname'
-  | 'job-title'
-  | 'company'
-  | 'department'
-  // Contact
-  | 'email'
-  | 'idn-email'
-  | 'phone'
-  | 'phone-international'
-  | 'phone-us'
-  | 'phone-vn'
-  | 'fax'
-  // Social
-  | 'website'
-  | 'avatar'
-  | 'github'
-  | 'linkedin'
-  | 'twitter'
-  // Network
-  | 'url'
-  | 'uri'
-  | 'uri-reference'
-  | 'hostname'
-  | 'idn-hostname'
-  | 'ipv4'
-  | 'ipv6'
-  | 'ip'
-  | 'port'
-  | 'mac'
-  | 'user-agent'
-  | 'content-type'
-  | 'accept'
-  | 'bearer-token'
-  | 'api-key'
-  // Date & Time
-  | 'date'
-  | 'date-time'
-  | 'time'
-  | 'time-24h'
-  | 'timestamp'
-  | 'duration'
-  | 'timezone'
-  // Address
-  | 'address-line1'
-  | 'address-line2'
-  | 'address-city'
-  | 'address-state'
-  | 'address-country'
-  | 'address'
-  | 'postal-code'
-  | 'postal-code-us'
-  | 'postal-code-vn'
-  | 'country-code-2'
-  | 'country-code-3'
-  | 'country-code-numeric'
-  // Financial (string)
-  | 'creditcard'
-  | 'creditcard-visa'
-  | 'creditcard-mc'
-  | 'credit-card'
-  | 'card-number'
-  | 'cvv'
-  | 'iban'
-  | 'swift'
-  | 'bic'
-  | 'currency'
-  | 'bitcoin'
-  | 'ethereum'
-  | 'tax-id'
-  | 'vat'
-  // Money (formatted string)
-  | 'money'
-  | 'decimal'
-  // Document
-  | 'isbn'
-  | 'isbn10'
-  | 'isbn13'
-  | 'ean'
-  | 'passport'
-  | 'identity-card'
-  | 'driver-license'
-  | 'ssn'
-  // Media & Encoding
-  | 'base64'
-  | 'hex'
-  | 'binary'
-  | 'byte'
-  | 'json'
-  | 'jwt'
-  | 'mime'
-  | 'mimetype'
-  | 'slug'
-  | 'password'
-  | 'strong'
-  // Code & Tech
-  | 'semver'
-  | 'locale'
-  | 'alpha'
-  | 'alphanumeric'
-  | 'numeric'
-  | 'octal'
-  | 'ascii'
-  | 'regex'
-  // Color
-  | 'color'
-  | 'color-name'
-  | 'hexcolor'
-  | 'rgb'
-  | 'hsl'
-  // File
-  | 'file-path'
-  | 'dir-path'
-  | 'file-ext'
-  | 'css-class'
-  | 'css-selector'
-  // Markup
-  | 'markdown'
-  | 'html'
-  | 'xml';
-
-/**
- * Number formats — property type MUST be `Number`.
- */
-export type NumberFormat =
-  | 'float'
-  | 'double'
-  | 'int32'
-  | 'int64'
-  | 'positive'
-  | 'negative'
-  | 'latitude'
-  | 'longitude'
-  | 'percentage';
-
-/**
- * Boolean formats — property type MUST be `Boolean`.
- */
-export type BooleanFormat = 'boolean';
 
 // ─── Typed options for overloads ─────────────────────────────────
 
@@ -243,19 +92,18 @@ export type XPropertyOptions = ApiPropertyOptions & {
 function resolveOptions(
   options: { type?: unknown; format?: string } & BaseProps,
 ): ApiPropertyOptions {
-  const opts = options as XPropertyOptions;
-  if (!opts.format) return options as ApiPropertyOptions;
+  if (!options.format) return options as ApiPropertyOptions;
   const autoExample =
-    opts.example === undefined
+    options.example === undefined
       ? getFormatExample(
-          typeof opts.type === 'string' ? opts.type : undefined,
-          opts.format,
+          typeof options.type === 'string' ? options.type : undefined,
+          options.format,
         )
       : undefined;
   return {
-    ...opts,
+    ...options,
     ...(autoExample !== undefined ? { example: autoExample } : {}),
-  };
+  } as ApiPropertyOptions;
 }
 
 /**
@@ -264,11 +112,12 @@ function resolveOptions(
 function createEnhancedDecorator(
   options: { type?: unknown; format?: string; required?: boolean } & BaseProps,
 ): PropertyDecorator {
-  const swaggerOpts = resolveOptions(options);
+  const opts = { ...options, required: options.required ?? false };
+  const swaggerOpts = resolveOptions(opts);
   const swaggerDeco = NestApiProperty(swaggerOpts);
   const validatorDecos = getValidatorDecorators({
-    format: options?.format,
-    required: options?.required,
+    format: opts.format,
+    required: opts.required,
   });
 
   return (target: object, propertyKey: string | symbol) => {
@@ -293,7 +142,7 @@ function createEnhancedDecorator(
  * - `BooleanFormat` (boolean) → `type: Boolean` (required)
  * - No format → any type allowed
  *
- * Use `required: false` to mark the field as optional in the API schema.
+ * Use `required: true` to mark the field as required in the API schema.
  *
  * @param options - Property options with type-safe format
  * @returns Property decorator (combines swagger + validation)
