@@ -10,3 +10,5 @@ if (!isPackageInstalled('@nestjs/swagger')) {
 const config = require('./config') as typeof import('./config');
 
 export const { configSwagger } = config;
+
+export * from './decorators';

@@ -182,6 +182,7 @@
     "@nestjs/core": ">=10.0.0",
     "@nestjs/swagger": ">=11.0.0",
     "@scalar/nestjs-api-reference": ">=1.0.0",
+    "class-validator": ">=0.14.0",
     "reflect-metadata": ">=0.1.0",
     "rxjs": ">=7.0.0"
   },
@@ -196,6 +197,9 @@
       "optional": true
     },
     "@scalar/nestjs-api-reference": {
+      "optional": true
+    },
+    "class-validator": {
       "optional": true
     },
     "reflect-metadata": {
@@ -219,6 +223,7 @@
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
     "@types/supertest": "^7.0.0",
+    "class-validator": "^0.15.1",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
