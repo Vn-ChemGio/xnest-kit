@@ -325,7 +325,7 @@ describe('configSwagger', () => {
   });
 
   describe('defaultResponses', () => {
-    it('should apply default responses with full options', () => {
+    it('should apply default responses from status code array', () => {
       const doc = getDoc();
       doc.paths['/users'] = {
         get: { responses: {} },
@@ -333,34 +333,7 @@ describe('configSwagger', () => {
       };
 
       configSwagger(mockApp, {
-        defaultResponses: {
-          409: {
-            description: 'Conflict',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    statusCode: { type: 'number', example: 409 },
-                  },
-                },
-              },
-            },
-          },
-          500: {
-            description: 'Internal server error',
-            content: {
-              'application/json': {
-                schema: {
-                  type: 'object',
-                  properties: {
-                    statusCode: { type: 'number', example: 500 },
-                  },
-                },
-              },
-            },
-          },
-        },
+        defaultResponses: [409, 500],
       });
 
       expect(doc.paths['/users'].get.responses).toEqual({
@@ -370,38 +343,15 @@ describe('configSwagger', () => {
             'application/json': {
               schema: {
                 type: 'object',
-                properties: { statusCode: { type: 'number', example: 409 } },
+                properties: {
+                  statusCode: { type: 'number', example: 409 },
+                  message: { type: 'string', example: 'Conflict' },
+                  error: { type: 'string', example: 'Conflict' },
+                },
               },
             },
           },
         },
-        '500': {
-          description: 'Internal server error',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: { statusCode: { type: 'number', example: 500 } },
-              },
-            },
-          },
-        },
-      });
-    });
-
-    it('should auto-generate body when value is true', () => {
-      const doc = getDoc();
-      doc.paths['/users'] = {
-        get: { responses: {} },
-      };
-
-      configSwagger(mockApp, {
-        defaultResponses: {
-          500: true,
-        },
-      });
-
-      expect(doc.paths['/users'].get.responses).toEqual({
         '500': {
           description: 'Internal Server Error',
           content: {
@@ -420,34 +370,21 @@ describe('configSwagger', () => {
       });
     });
 
-    it('should auto-generate body for known statuses with true', () => {
+    it('should apply to all methods', () => {
       const doc = getDoc();
       doc.paths['/users'] = {
         get: { responses: {} },
+        post: { responses: {} },
+        delete: { responses: {} },
       };
 
       configSwagger(mockApp, {
-        defaultResponses: {
-          409: true,
-          500: true,
-        },
+        defaultResponses: [500],
       });
 
-      expect(doc.paths['/users'].get.responses['409']).toEqual({
-        description: 'Conflict',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                statusCode: { type: 'number', example: 409 },
-                message: { type: 'string', example: 'Conflict' },
-                error: { type: 'string', example: 'Conflict' },
-              },
-            },
-          },
-        },
-      });
+      expect(doc.paths['/users'].get.responses['500']).toBeDefined();
+      expect(doc.paths['/users'].post.responses['500']).toBeDefined();
+      expect(doc.paths['/users'].delete.responses['500']).toBeDefined();
     });
 
     it('should not overwrite existing responses with body', () => {
@@ -468,10 +405,7 @@ describe('configSwagger', () => {
       };
 
       configSwagger(mockApp, {
-        defaultResponses: {
-          409: true,
-          500: true,
-        },
+        defaultResponses: [409, 500],
       });
 
       expect(doc.paths['/users'].get.responses['409']).toEqual({
@@ -499,7 +433,7 @@ describe('configSwagger', () => {
       });
     });
 
-    it('should merge auto-generated body into existing response without body', () => {
+    it('should merge into existing response without body', () => {
       const doc = getDoc();
       doc.paths['/users'] = {
         get: {
@@ -510,9 +444,7 @@ describe('configSwagger', () => {
       };
 
       configSwagger(mockApp, {
-        defaultResponses: {
-          500: true,
-        },
+        defaultResponses: [500],
       });
 
       expect(doc.paths['/users'].get.responses).toEqual({
@@ -534,46 +466,14 @@ describe('configSwagger', () => {
       });
     });
 
-    it('should not apply auto401 as a response', () => {
+    it('should generate body for unknown status code', () => {
       const doc = getDoc();
       doc.paths['/users'] = {
         get: { responses: {} },
       };
 
       configSwagger(mockApp, {
-        defaultResponses: {
-          401: true,
-          auto401: true,
-        },
-      });
-
-      expect(doc.paths['/users'].get.responses['401']).toEqual({
-        description: 'Unauthorized',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {
-                statusCode: { type: 'number', example: 401 },
-                message: { type: 'string', example: 'Unauthorized' },
-                error: { type: 'string', example: 'Unauthorized' },
-              },
-            },
-          },
-        },
-      });
-    });
-
-    it('should generate body for unknown status with true', () => {
-      const doc = getDoc();
-      doc.paths['/users'] = {
-        get: { responses: {} },
-      };
-
-      configSwagger(mockApp, {
-        defaultResponses: {
-          999: true,
-        },
+        defaultResponses: [999],
       });
 
       expect(doc.paths['/users'].get.responses).toEqual({
@@ -597,9 +497,7 @@ describe('configSwagger', () => {
 
     it('should not apply when no paths exist', () => {
       configSwagger(mockApp, {
-        defaultResponses: {
-          500: true,
-        },
+        defaultResponses: [500],
       });
 
       const doc = getDoc();

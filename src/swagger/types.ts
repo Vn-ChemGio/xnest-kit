@@ -3,7 +3,6 @@ import type {
   ServerObject,
   TagObject,
 } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
-import type { ApiResponseOptions } from '@nestjs/swagger';
 
 export type SecuritySchemePreset =
   'bearer' | 'basic' | 'oauth2' | 'apikey' | 'cookie';
@@ -24,25 +23,16 @@ export interface SwaggerSecurity {
 }
 
 /**
- * Default API responses applied to all endpoints unless bypassed.
+ * Default API error responses applied to all endpoints unless bypassed.
  *
  * @example
  * ```typescript
  * configSwagger(app, {
- *   defaultResponses: {
- *     409: true, // auto-generates { statusCode: 409, message: "Conflict", error: "Conflict" }
- *     500: true, // auto-generates { statusCode: 500, message: "Internal Server Error", error: "Internal Server Error" }
- *     auto401: true, // auto-add 401 when no @Public() decorator
- *   },
+ *   defaultResponses: [409, 500],
  * });
  * ```
  */
-export interface DefaultResponses {
-  /** HTTP status code → `true` for auto-generated body, or full `ApiResponseOptions` */
-  [status: number]: ApiResponseOptions | boolean;
-  /** Auto-add 401 when route is not marked as @Public() */
-  auto401?: boolean;
-}
+export type DefaultResponses = number[];
 
 export interface SwaggerOptions {
   /** API title */
@@ -74,17 +64,13 @@ export interface SwaggerOptions {
    */
   securities?: SwaggerSecurity[];
   /**
-   * Default responses applied to all endpoints.
+   * Default error responses applied to all endpoints.
    * Individual endpoints can bypass via `@ApiResponses([], { bypassDefaults: true })`.
    *
    * @example
    * ```typescript
    * configSwagger(app, {
-   *   defaultResponses: {
-   *     409: true,
-   *     500: true,
-   *     auto401: true,
-   *   },
+   *   defaultResponses: [409, 500],
    * });
    * ```
    */

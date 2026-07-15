@@ -2,12 +2,9 @@ import type { INestApplication } from '@nestjs/common';
 import type { OpenAPIObject } from '@nestjs/swagger';
 import type { SecuritySchemeObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import type {
-  SwaggerOptions,
-  SecuritySchemePreset,
-  DefaultResponses,
-} from '../types';
+import type { SwaggerOptions, SecuritySchemePreset } from '../types';
 import { isPackageInstalled } from '../../utils';
+import { buildDefaultError } from '../shared';
 
 /** Default doc path when `options.path` is omitted. */
 const DEFAULT_PATH = 'api/docs';
@@ -16,7 +13,7 @@ const DEFAULT_PATH = 'api/docs';
  * Stored default responses from `configSwagger`.
  * Used by `ApiResponses` to merge defaults into individual endpoints.
  */
-let storedDefaultResponses: DefaultResponses | undefined;
+let storedDefaultResponses: number[] | undefined;
 
 /**
  * HTTP methods that can have operations in an OpenAPI path item.
@@ -30,92 +27,6 @@ const HTTP_METHODS = [
   'options',
   'head',
 ] as const;
-
-/**
- * Pre-built OpenAPI response schemas for common NestJS error statuses.
- * Used when `defaultResponses: { 500: true }` — no manual schema needed.
- *
- * Format follows OpenAPI 3.0: schema inside `content.application/json`.
- */
-function buildNestErrorResponse(
-  status: number,
-  message: string,
-): { description: string; content: Record<string, unknown> } {
-  return {
-    description: message,
-    content: {
-      'application/json': {
-        schema: {
-          type: 'object',
-          properties: {
-            statusCode: { type: 'number', example: status },
-            message: { type: 'string', example: message },
-            error: { type: 'string', example: message },
-          },
-        },
-      },
-    },
-  };
-}
-
-/**
- * HTTP status text for codes not in the standard set.
- * Used as fallback when `true` is passed for an unknown status.
- */
-const HTTP_STATUS_TEXT: Record<number, string> = {
-  400: 'Bad Request',
-  401: 'Unauthorized',
-  403: 'Forbidden',
-  404: 'Not Found',
-  405: 'Method Not Allowed',
-  408: 'Request Timeout',
-  409: 'Conflict',
-  410: 'Gone',
-  411: 'Length Required',
-  412: 'Precondition Failed',
-  413: 'Payload Too Large',
-  414: 'URI Too Long',
-  415: 'Unsupported Media Type',
-  416: 'Range Not Satisfiable',
-  417: 'Expectation Failed',
-  422: 'Unprocessable Entity',
-  423: 'Locked',
-  424: 'Failed Dependency',
-  425: 'Too Early',
-  426: 'Upgrade Required',
-  428: 'Precondition Required',
-  429: 'Too Many Requests',
-  431: 'Request Header Fields Too Large',
-  451: 'Unavailable For Legal Reasons',
-  500: 'Internal Server Error',
-  501: 'Not Implemented',
-  502: 'Bad Gateway',
-  503: 'Service Unavailable',
-  504: 'Gateway Timeout',
-  505: 'HTTP Version Not Supported',
-  507: 'Insufficient Storage',
-  508: 'Loop Detected',
-  510: 'Not Extended',
-  511: 'Network Authentication Required',
-};
-
-/**
- * Get default description for any HTTP status code.
- */
-function getDefaultMessage(status: number): string {
-  return HTTP_STATUS_TEXT[status] ?? `Error ${status}`;
-}
-
-/**
- * Build a default error response for any status code.
- */
-function buildDefaultError(status: number): {
-  description: string;
-  content: Record<string, unknown>;
-} {
-  const message = getDefaultMessage(status);
-  return buildNestErrorResponse(status, message);
-}
 
 /**
  * Well-known security scheme presets.
@@ -150,7 +61,7 @@ function normalizePath(p: string | undefined): string {
  *
  * @internal
  */
-export function getDefaultResponses(): DefaultResponses | undefined {
+export function getDefaultResponses(): number[] | undefined {
   return storedDefaultResponses;
 }
 
@@ -228,7 +139,7 @@ export function configSwagger(
  */
 function applyDefaultResponses(
   document: OpenAPIObject,
-  defaults: DefaultResponses,
+  statusCodes: number[],
 ): void {
   if (!document.paths) return;
 
@@ -247,24 +158,18 @@ function applyDefaultResponses(
         operation.responses = {};
       }
 
-      Object.entries(defaults).forEach(([key, value]) => {
-        if (key === 'auto401') return;
-        const status = Number(key);
-        const existing = operation.responses[String(status)];
+      statusCodes.forEach((status) => {
+        const key = String(status);
+        const existing = operation.responses[key];
         const hasBody =
           existing && (existing.schema || existing.content || existing.type);
         if (hasBody) return;
 
-        const fallback = value === true ? buildDefaultError(status) : undefined;
-        const resolved =
-          value === true
-            ? (fallback ?? { description: '' })
-            : { ...(value as Record<string, unknown>) };
-
-        operation.responses[String(status)] = {
+        const generated = buildDefaultError(status);
+        operation.responses[key] = {
           ...(existing ?? {}),
-          ...resolved,
-          description: existing?.description ?? resolved.description ?? '',
+          ...generated,
+          description: existing?.description ?? generated.description ?? '',
         };
       });
     });
