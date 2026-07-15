@@ -1,8 +1,8 @@
+export { ApiResponse, type ApiResponseXOptions } from './api-response';
 export { ApiResponses } from './api-responses';
 
 export {
   ApiOperation,
-  ApiResponse,
   ApiTags,
   ApiConsumes,
   ApiProduces,
