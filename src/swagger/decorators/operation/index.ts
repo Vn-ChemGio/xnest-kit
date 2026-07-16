@@ -1,5 +1,6 @@
-export { ApiResponse, type ApiResponseXOptions } from './api-response';
+export { ApiResponse } from './api-response';
 export { ApiResponses } from './api-responses';
+export { Paginated } from './paginated';
 
 export {
   ApiOperation,

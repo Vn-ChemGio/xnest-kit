@@ -15,23 +15,25 @@ function getStatus(target: object, key: string): number {
   return STATUS_MAP[method.toUpperCase()] ?? 200;
 }
 
-export type ApiResponseXOptions = ApiResponseOptions & { status?: number };
-
 /**
  * Enhanced `@ApiResponse` decorator.
  *
- * Same as `@nestjs/swagger` `ApiResponse`, but `status` is optional.
- * When omitted, auto-detected from the HTTP method decorator.
+ * Same as `@nestjs/swagger` `ApiResponse`, but `status` is optional
+ * and auto-detected from the HTTP method.
  *
  * @example
  * ```typescript
  * @ApiResponse({ type: User })
  * @Get(':id')
  * findOne(@Param('id') id: string) {}
+ *
+ * @ApiResponse({ type: Paginated(User) })
+ * @Get()
+ * findAll() {}
  * ```
  */
 export function ApiResponse(
-  options: ApiResponseXOptions,
+  options: ApiResponseOptions,
 ): MethodDecorator & ClassDecorator {
   return (
     target: object,

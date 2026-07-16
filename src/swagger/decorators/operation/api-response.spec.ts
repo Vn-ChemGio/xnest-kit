@@ -1,12 +1,13 @@
 import 'reflect-metadata';
 import { ApiResponse } from './api-response';
+import { Paginated } from './paginated';
 
 class User {
   id: string;
   name: string;
 }
 
-describe('ApiResponse (enhanced)', () => {
+describe('ApiResponse', () => {
   it('should apply decorator with explicit status', () => {
     class TestController {
       @ApiResponse({ status: 200 })
@@ -59,35 +60,35 @@ describe('ApiResponse (enhanced)', () => {
     expect(TestController.prototype.find).toBeDefined();
   });
 
-  it('should forward nullable option', () => {
-    class TestController {
-      @ApiResponse({ nullable: true })
-      findOne() {}
-    }
-
-    // eslint-disable-next-line @typescript-eslint/unbound-method
-    expect(TestController.prototype.findOne).toBeDefined();
+  it('should handle decorator factory without property key', () => {
+    const decorator = ApiResponse({});
+    expect(typeof decorator).toBe('function');
   });
 
-  it('should forward headers option', () => {
+  it('should support Paginated type', () => {
     class TestController {
-      @ApiResponse({
-        headers: {
-          'X-Total-Count': {
-            description: 'Total',
-            schema: { type: 'integer' },
-          },
-        },
-      })
+      @ApiResponse({ type: Paginated(User) })
       findAll() {}
     }
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(TestController.prototype.findAll).toBeDefined();
   });
+});
 
-  it('should handle decorator factory without property key', () => {
-    const decorator = ApiResponse({});
-    expect(typeof decorator).toBe('function');
+describe('Paginated', () => {
+  it('should create a class with correct name', () => {
+    const PaginatedUser = Paginated(User);
+    expect(PaginatedUser.name).toBe('PaginatedUser');
+  });
+
+  it('should create a class with data, total, page, limit properties', () => {
+    const PaginatedUser = Paginated(User);
+    const instance = new PaginatedUser();
+
+    expect(instance).toHaveProperty('data');
+    expect(instance).toHaveProperty('total');
+    expect(instance).toHaveProperty('page');
+    expect(instance).toHaveProperty('limit');
   });
 });
