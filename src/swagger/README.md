@@ -1,17 +1,13 @@
-# swagger
+# xnest-kit/swagger
 
-> Swagger/Scalar configuration and enhanced decorators for NestJS
+Swagger/Scalar configuration and enhanced decorators for NestJS.
 
 > Write less boilerplate. Get fully documented APIs in minutes.
 
-## Status
-
-![](https://img.shields.io/badge/alpha-orange)
-
-## Installation
+## Prerequisites
 
 ```bash
-npm install xnest-kit @nestjs/swagger
+npm install @nestjs/swagger
 ```
 
 Optional — for Scalar UI:
@@ -37,12 +33,10 @@ bootstrap();
 
 Automatically uses **Scalar** if `@scalar/nestjs-api-reference` is installed, otherwise **Swagger UI**.
 
----
-
 ## configSwagger
 
 ```typescript
-configSwagger(app: INestApplication, options?: SwaggerOptions): OpenAPIObject
+configSwagger(app, options?): OpenAPIObject
 ```
 
 | Option | Type | Default | Description |
@@ -56,23 +50,13 @@ configSwagger(app: INestApplication, options?: SwaggerOptions): OpenAPIObject
 | `securities` | `SwaggerSecurity[]` | - | Security schemes |
 | `defaultResponses` | `number[]` | - | Default error responses for all endpoints |
 
-### Securities
-
 ```typescript
 configSwagger(app, {
-  securities: [{ name: 'bearer', preset: 'bearer' }, { name: 'apiKey', preset: 'apikey', options: { name: 'X-API-Key' } }],
+  title: 'My API',
+  securities: [{ name: 'bearer', preset: 'bearer' }],
+  defaultResponses: [400, 401, 403, 404, 500],
 });
 ```
-
-Available presets: `bearer`, `basic`, `oauth2`, `apikey`, `cookie`.
-
-### Default Responses
-
-```typescript
-configSwagger(app, { defaultResponses: [400, 401, 403, 404, 500] });
-```
-
-Automatically applies standard error response schemas to all endpoints.
 
 ---
 
@@ -112,6 +96,7 @@ findAll() {}
 ```typescript
 import { ApiResponse } from 'xnest-kit/swagger';
 
+// status auto-detected: 200, 201, 200
 @ApiResponse({ type: User })
 @Get(':id')
 findOne() {}
@@ -124,6 +109,8 @@ create() {}
 @Get()
 findAll() {}
 ```
+
+> Saves 3 × `status: xxx` repetitions per controller.
 
 ---
 
@@ -146,6 +133,7 @@ create() {}
 ```typescript
 import { ApiResponses } from 'xnest-kit/swagger';
 
+// 3 decorators → 1 call + auto defaultResponses
 @ApiResponses([{ status: 201, type: User }, { status: 400, description: 'Bad request' }])
 @Post()
 create() {}
@@ -180,25 +168,10 @@ class PaginatedUser {
 ```typescript
 import { PaginatedType } from 'xnest-kit/swagger';
 
+// 12 lines → 1 line
 @ApiResponse({ type: PaginatedType(User) })
 @Get()
 findAll() {}
-```
-
-Generated schema:
-
-```json
-{
-  "PaginatedUser": {
-    "type": "object",
-    "properties": {
-      "data": { "type": "array", "items": { "$ref": "#/components/schemas/User" } },
-      "total": { "type": "integer", "example": 100 },
-      "page": { "type": "integer", "example": 1 },
-      "limit": { "type": "integer", "example": 10 }
-    }
-  }
-}
 ```
 
 ---
@@ -223,6 +196,7 @@ findAll() {}
 ```typescript
 import { PaginatedQuery, PaginatedType } from 'xnest-kit/swagger';
 
+// 3 @ApiQuery → 1 @PaginatedQuery
 @PaginatedQuery()
 @ApiResponse({ type: PaginatedType(User) })
 @Get()
@@ -258,6 +232,7 @@ email: string;
 ```typescript
 import { ApiProperty } from 'xnest-kit/swagger';
 
+// example auto-generated from format
 @ApiProperty({ type: String, format: 'uuid' })
 id: string;
 
