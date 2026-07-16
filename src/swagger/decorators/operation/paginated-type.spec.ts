@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ApiResponse } from './api-response';
-import { Paginated } from './paginated';
+import { PaginatedType } from './paginated-type';
 
 class User {
   id: string;
@@ -13,14 +13,14 @@ class Product {
   price: number;
 }
 
-describe('Paginated', () => {
+describe('PaginatedType', () => {
   it('should create class with correct name', () => {
-    const PaginatedUser = Paginated(User);
+    const PaginatedUser = PaginatedType(User);
     expect(PaginatedUser.name).toBe('PaginatedUser');
   });
 
   it('should create instance with data, total, page, limit', () => {
-    const PaginatedUser = Paginated(User);
+    const PaginatedUser = PaginatedType(User);
     const instance = new PaginatedUser();
 
     expect('data' in instance).toBe(true);
@@ -30,7 +30,7 @@ describe('Paginated', () => {
   });
 
   it('should work with different entity types', () => {
-    const PaginatedProduct = Paginated(Product);
+    const PaginatedProduct = PaginatedType(Product);
     expect(PaginatedProduct.name).toBe('PaginatedProduct');
 
     const instance = new PaginatedProduct();
@@ -38,14 +38,14 @@ describe('Paginated', () => {
   });
 
   it('should return different classes for different entities', () => {
-    const PaginatedUser = Paginated(User);
-    const PaginatedProduct = Paginated(Product);
+    const PaginatedUser = PaginatedType(User);
+    const PaginatedProduct = PaginatedType(Product);
     expect(PaginatedUser).not.toBe(PaginatedProduct);
   });
 
   it('should work with ApiResponse decorator', () => {
     class TestController {
-      @ApiResponse({ type: Paginated(User) })
+      @ApiResponse({ type: PaginatedType(User) })
       findAll() {}
     }
 

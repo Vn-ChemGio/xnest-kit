@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { ApiResponse } from './api-response';
-import { Paginated } from './paginated';
+import { PaginatedType } from './paginated-type';
 
 class User {
   id: string;
@@ -65,30 +65,13 @@ describe('ApiResponse', () => {
     expect(typeof decorator).toBe('function');
   });
 
-  it('should support Paginated type', () => {
+  it('should support PaginatedType', () => {
     class TestController {
-      @ApiResponse({ type: Paginated(User) })
+      @ApiResponse({ type: PaginatedType(User) })
       findAll() {}
     }
 
     // eslint-disable-next-line @typescript-eslint/unbound-method
     expect(TestController.prototype.findAll).toBeDefined();
-  });
-});
-
-describe('Paginated', () => {
-  it('should create a class with correct name', () => {
-    const PaginatedUser = Paginated(User);
-    expect(PaginatedUser.name).toBe('PaginatedUser');
-  });
-
-  it('should create a class with data, total, page, limit properties', () => {
-    const PaginatedUser = Paginated(User);
-    const instance = new PaginatedUser();
-
-    expect(instance).toHaveProperty('data');
-    expect(instance).toHaveProperty('total');
-    expect(instance).toHaveProperty('page');
-    expect(instance).toHaveProperty('limit');
   });
 });

@@ -12,12 +12,12 @@ import type { Type } from '@nestjs/common';
  *
  * @example
  * ```typescript
- * @ApiResponse({ type: Paginated(User) })
+ * @ApiResponse({ type: PaginatedType(User) })
  * @Get()
  * findAll() {}
  * ```
  */
-export function Paginated<T>(itemClass: Type<T>): Type<{
+export function PaginatedType<T>(itemClass: Type<T>): Type<{
   data: T[];
   total: number;
   page: number;

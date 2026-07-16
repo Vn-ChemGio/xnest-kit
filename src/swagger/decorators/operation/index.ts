@@ -1,6 +1,7 @@
 export { ApiResponse } from './api-response';
 export { ApiResponses } from './api-responses';
-export { Paginated } from './paginated';
+export { PaginatedType } from './paginated-type';
+export { PaginatedQuery } from './paginated-query';
 
 export {
   ApiOperation,
