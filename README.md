@@ -32,7 +32,7 @@
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| [openapi](./src/openapi) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
+| [swagger](./src/swagger) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [cache](./src/cache) | CacheManager with Redis/Valkey | ![](https://img.shields.io/badge/alpha-orange) |
 | [typeorm](./src/typeorm) | TypeORM config & entity decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [queue](./src/queue) | BullMQ config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
@@ -71,13 +71,13 @@ npm install xnest-kit
 ### Import all modules
 
 ```typescript
-import { configOpenApi, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
 ```
 
 ### Import specific module (recommended for tree-shaking)
 
 ```typescript
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 import { configCache } from 'xnest-kit/cache';
 import { configTypeOrm } from 'xnest-kit/typeorm';
 import { configQueue } from 'xnest-kit/queue';
@@ -88,16 +88,16 @@ import { configExcel } from 'xnest-kit/excel';
 
 ## Usage Examples
 
-### OpenAPI (Swagger/Scalar)
+### Swagger (Scalar/OpenAPI)
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  configOpenApi(app, {
+  configSwagger(app, {
     title: 'My API',
     description: 'API documentation',
     version: '1.0.0',

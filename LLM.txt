@@ -25,7 +25,7 @@ xnest-kit is a modular, production-ready NestJS toolkit that provides 15 feature
 
 ## Feature Modules
 
-1. **openapi** - Swagger/Scalar configuration and decorators
+1. **swagger** - Swagger/Scalar configuration and decorators
 2. **cache** - CacheManager with Redis/Valkey support
 3. **typeorm** - TypeORM configuration and entity decorators
 4. **queue** - BullMQ configuration and decorators
@@ -45,10 +45,10 @@ xnest-kit is a modular, production-ready NestJS toolkit that provides 15 feature
 
 ```typescript
 // Full import
-import { configOpenApi } from 'xnest-kit';
+import { configSwagger } from 'xnest-kit';
 
 // Sub-module import (recommended)
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 ```
 
 ## Development Workflow

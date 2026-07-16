@@ -8,7 +8,7 @@ xnest-kit provides a collection of utilities and modules for NestJS applications
 
 ## Features
 
-- **15 Feature Modules** - OpenAPI, Cache, TypeORM, Queue, Validation, and more
+- **15 Feature Modules** - Swagger, Cache, TypeORM, Queue, Validation, and more
 - **TypeScript-first** - Full type safety and IntelliSense support
 - **Tree-shakeable** - Import only what you need
 - **Production-ready** - Built with best practices and testing in mind

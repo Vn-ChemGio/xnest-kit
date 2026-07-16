@@ -5,13 +5,13 @@
 ### Method 1: Import All Modules
 
 ```typescript
-import { configOpenApi, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
 ```
 
 ### Method 2: Import Specific Module (Recommended)
 
 ```typescript
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 import { configCache } from 'xnest-kit/cache';
 import { configTypeOrm } from 'xnest-kit/typeorm';
 ```
@@ -25,13 +25,13 @@ import { configTypeOrm } from 'xnest-kit/typeorm';
 ```typescript
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // Configure OpenAPI documentation
-  configOpenApi(app, {
+  configSwagger(app, {
     title: 'My API',
     description: 'API documentation for my application',
     version: '1.0.0',

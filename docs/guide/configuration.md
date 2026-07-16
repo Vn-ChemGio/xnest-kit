@@ -6,10 +6,10 @@ Each module can be configured globally when imported in your root module.
 
 ## Module-Specific Configuration
 
-### OpenAPI Configuration
+### Swagger Configuration
 
 ```typescript
-configOpenApi(app, {
+configSwagger(app, {
   title: 'My API',
   description: 'API documentation',
   version: '1.0.0',

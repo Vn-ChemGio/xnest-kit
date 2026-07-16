@@ -82,7 +82,7 @@ We use **master + dev** branching model:
 | `feat/` | New feature | `feat/add-redis-cache` |
 | `fix/` | Bug fix | `fix/excel-parsing-error` |
 | `docs/` | Documentation | `docs/update-readme` |
-| `refactor/` | Code refactoring | `refactor/openapi-module` |
+| `refactor/` | Code refactoring | `refactor/swagger-module` |
 | `test/` | Adding tests | `test/cache-module` |
 | `chore/` | Maintenance | `chore/update-deps` |
 
@@ -108,7 +108,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) specifica
 | `fix` | Bug fix | `fix(excel): fix parsing large files` |
 | `docs` | Documentation | `docs: update API examples` |
 | `style` | Formatting | `style: fix indentation` |
-| `refactor` | Code refactoring | `refactor(openapi): simplify config` |
+| `refactor` | Code refactoring | `refactor(swagger): simplify config` |
 | `perf` | Performance | `perf(typeorm): optimize queries` |
 | `test` | Tests | `test(queue): add unit tests` |
 | `build` | Build system | `build: update tsconfig` |
@@ -123,7 +123,7 @@ Scopes must match the feature module names in `src/`:
 | Scope | Module | Description |
 |-------|--------|-------------|
 | `root` | Root level | package.json, tsconfig, CI, etc. |
-| `openapi` | [openapi](./src/openapi) | Swagger/Scalar config & decorators |
+| `swagger` | [swagger](./src/swagger) | Swagger/Scalar config & decorators |
 | `cache` | [cache](./src/cache) | CacheManager with Redis/Valkey |
 | `typeorm` | [typeorm](./src/typeorm) | TypeORM config & entity decorators |
 | `queue` | [queue](./src/queue) | BullMQ config & decorators |
@@ -155,9 +155,9 @@ git commit -m "feat(excel): add Excel upload decorator"
 git commit -m "fix(cache): fix Redis connection timeout"
 
 # Breaking change
-git commit -m "feat(api)!: change configOpenApi signature
+git commit -m "feat(api)!: change configSwagger signature
 
-BREAKING CHANGE: configOpenApi now requires options object"
+BREAKING CHANGE: configSwagger now requires options object"
 ```
 
 ## Pull Request Process
@@ -258,9 +258,9 @@ src/
  * @returns void
  *
  * @example
- * configOpenApi(app, { title: 'My API' });
+ * configSwagger(app, { title: 'My API' });
  */
-export function configOpenApi(app: INestApplication, options: OpenApiOptions): void {
+export function configSwagger(app: INestApplication, options: SwaggerOptions): void {
   // Implementation
 }
 ```
@@ -275,14 +275,14 @@ export function configOpenApi(app: INestApplication, options: OpenApiOptions): v
 - Mock external dependencies
 
 ```typescript
-describe('configOpenApi', () => {
+describe('configSwagger', () => {
   it('should configure Swagger documentation', () => {
     // Arrange
     const app = createMock<INestApplication>();
     const options = { title: 'Test API' };
 
     // Act
-    configOpenApi(app, options);
+    configSwagger(app, options);
 
     // Assert
     expect(mockSwagger.setup).toHaveBeenCalled();

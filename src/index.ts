@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * @module xnest-kit
  * @description A modular, production-ready NestJS toolkit.
@@ -8,10 +11,10 @@
  * @example
  * ```typescript
  * // Import all modules
- * import { configOpenApi, configCache, configTypeOrm } from 'xnest-kit';
+ * import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
  *
  * // Import specific module (recommended for tree-shaking)
- * import { configOpenApi } from 'xnest-kit/openapi';
+ * import { configSwagger } from 'xnest-kit/swagger';
  * import { configCache } from 'xnest-kit/cache';
  * import { configTypeOrm } from 'xnest-kit/typeorm';
  * ```
@@ -19,7 +22,23 @@
  * @see {@link https://github.com/Vn-ChemGio/xnest-kit} for documentation
  */
 
-export * from './openapi';
+import { isPackageInstalled } from './utils';
+
+/**
+ * Conditional swagger re-export.
+ * Requires @nestjs/swagger to be installed.
+ * If not installed, swagger exports are silently skipped.
+ */
+if (isPackageInstalled('@nestjs/swagger')) {
+  const swagger = require('./swagger');
+  Object.keys(swagger).forEach((key: string) => {
+    Object.defineProperty(exports, key, {
+      get: () => swagger[key] as unknown,
+      enumerable: true,
+    });
+  });
+}
+
 export * from './cache';
 export * from './typeorm';
 export * from './queue';

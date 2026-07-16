@@ -1,16 +1,16 @@
 # Examples
 
-## OpenAPI
+## Swagger
 
 ```typescript
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { configOpenApi } from 'xnest-kit/openapi';
+import { configSwagger } from 'xnest-kit/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  configOpenApi(app, {
+  configSwagger(app, {
     title: 'My API',
     description: 'API documentation',
     version: '1.0.0',
