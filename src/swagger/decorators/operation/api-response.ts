@@ -27,7 +27,7 @@ function getStatus(target: object, key: string): number {
  * @Get(':id')
  * findOne(@Param('id') id: string) {}
  *
- * @ApiResponse({ type: Paginated(User) })
+ * @ApiResponse({ type: PaginatedType(User) })
  * @Get()
  * findAll() {}
  * ```
