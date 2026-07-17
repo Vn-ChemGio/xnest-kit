@@ -4,7 +4,7 @@
 
 ## Status
 
-![](https://img.shields.io/badge/alpha-orange)
+![](https://img.shields.io/badge/stable-brightgreen)
 
 ## Installation
 

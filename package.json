@@ -1,6 +1,6 @@
 {
   "name": "xnest-kit",
-  "version": "0.0.1-alpha.0.2",
+  "version": "0.0.3",
   "description": "A modular, production-ready NestJS toolkit — Bootstrap, Auth, SaaS, and Infra integrations in a single package.",
   "keywords": [
     "nestjs",
@@ -64,88 +64,71 @@
   "private": false,
   "license": "MIT",
   "main": "dist/index.js",
-  "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "default": "./dist/index.js"
     },
     "./swagger": {
       "types": "./dist/swagger/index.d.ts",
-      "import": "./dist/swagger/index.mjs",
-      "require": "./dist/swagger/index.js"
+      "default": "./dist/swagger/index.js"
     },
     "./cache": {
       "types": "./dist/cache/index.d.ts",
-      "import": "./dist/cache/index.mjs",
-      "require": "./dist/cache/index.js"
+      "default": "./dist/cache/index.js"
     },
     "./typeorm": {
       "types": "./dist/typeorm/index.d.ts",
-      "import": "./dist/typeorm/index.mjs",
-      "require": "./dist/typeorm/index.js"
+      "default": "./dist/typeorm/index.js"
     },
     "./queue": {
       "types": "./dist/queue/index.d.ts",
-      "import": "./dist/queue/index.mjs",
-      "require": "./dist/queue/index.js"
+      "default": "./dist/queue/index.js"
     },
     "./validation": {
       "types": "./dist/validation/index.d.ts",
-      "import": "./dist/validation/index.mjs",
-      "require": "./dist/validation/index.js"
+      "default": "./dist/validation/index.js"
     },
     "./notification": {
       "types": "./dist/notification/index.d.ts",
-      "import": "./dist/notification/index.mjs",
-      "require": "./dist/notification/index.js"
+      "default": "./dist/notification/index.js"
     },
     "./activity-feed": {
       "types": "./dist/activity-feed/index.d.ts",
-      "import": "./dist/activity-feed/index.mjs",
-      "require": "./dist/activity-feed/index.js"
+      "default": "./dist/activity-feed/index.js"
     },
     "./audit-log": {
       "types": "./dist/audit-log/index.d.ts",
-      "import": "./dist/audit-log/index.mjs",
-      "require": "./dist/audit-log/index.js"
+      "default": "./dist/audit-log/index.js"
     },
     "./logger": {
       "types": "./dist/logger/index.d.ts",
-      "import": "./dist/logger/index.mjs",
-      "require": "./dist/logger/index.js"
+      "default": "./dist/logger/index.js"
     },
     "./metrics": {
       "types": "./dist/metrics/index.d.ts",
-      "import": "./dist/metrics/index.mjs",
-      "require": "./dist/metrics/index.js"
+      "default": "./dist/metrics/index.js"
     },
     "./rate-limit": {
       "types": "./dist/rate-limit/index.d.ts",
-      "import": "./dist/rate-limit/index.mjs",
-      "require": "./dist/rate-limit/index.js"
+      "default": "./dist/rate-limit/index.js"
     },
     "./storage": {
       "types": "./dist/storage/index.d.ts",
-      "import": "./dist/storage/index.mjs",
-      "require": "./dist/storage/index.js"
+      "default": "./dist/storage/index.js"
     },
     "./stripe": {
       "types": "./dist/stripe/index.d.ts",
-      "import": "./dist/stripe/index.mjs",
-      "require": "./dist/stripe/index.js"
+      "default": "./dist/stripe/index.js"
     },
     "./webhook": {
       "types": "./dist/webhook/index.d.ts",
-      "import": "./dist/webhook/index.mjs",
-      "require": "./dist/webhook/index.js"
+      "default": "./dist/webhook/index.js"
     },
     "./excel": {
       "types": "./dist/excel/index.d.ts",
-      "import": "./dist/excel/index.mjs",
-      "require": "./dist/excel/index.js"
+      "default": "./dist/excel/index.js"
     }
   },
   "files": [

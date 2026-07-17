@@ -32,8 +32,8 @@
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| [swagger](./src/swagger) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
-| [cache](./src/cache) | CacheManager with Redis/Valkey | ![](https://img.shields.io/badge/alpha-orange) |
+| [swagger](./src/swagger) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/stable-brightgreen) |
+| [cache](./src/cache) | CacheManager with Redis/Valkey | ![](https://img.shields.io/badge/stable-brightgreen) |
 | [typeorm](./src/typeorm) | TypeORM config & entity decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [queue](./src/queue) | BullMQ config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [validation](./src/validation) | Request validation with i18n | ![](https://img.shields.io/badge/alpha-orange) |
@@ -71,19 +71,14 @@ npm install xnest-kit
 ### Import all modules
 
 ```typescript
-import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, CacheModule } from 'xnest-kit';
 ```
 
 ### Import specific module (recommended for tree-shaking)
 
 ```typescript
 import { configSwagger } from 'xnest-kit/swagger';
-import { configCache } from 'xnest-kit/cache';
-import { configTypeOrm } from 'xnest-kit/typeorm';
-import { configQueue } from 'xnest-kit/queue';
-import { configValidation } from 'xnest-kit/validation';
-import { configNotification } from 'xnest-kit/notification';
-import { configExcel } from 'xnest-kit/excel';
+import { CacheModule } from 'xnest-kit/cache';
 ```
 
 ## Usage Examples
@@ -101,25 +96,24 @@ async function bootstrap() {
     title: 'My API',
     description: 'API documentation',
     version: '1.0.0',
-    // Choose between 'swagger' or 'scalar'
-    provider: 'swagger',
+    provider: 'swagger', // or 'scalar'
+    defaultResponses: [409, 500], // auto-generate error responses
   });
   await app.listen(3000);
 }
 bootstrap();
 ```
 
-### Cache with Redis
+### Cache
 
 ```typescript
-import { configCache } from 'xnest-kit/cache';
+import { Module } from '@nestjs/common';
+import { CacheModule } from 'xnest-kit/cache';
 
-configCache(app, {
-  store: 'redis',
-  host: 'localhost',
-  port: 6379,
-  ttl: 60,
-});
+@Module({
+  imports: [CacheModule.forRoot()], // reads CACHE_URLS env
+})
+export class AppModule {}
 ```
 
 ### TypeORM
@@ -159,12 +153,24 @@ const buffer = await generateExcel(data, {
 
 ## Peer Dependencies
 
+### Required
+
 | Package | Version |
 |---------|---------|
 | `@nestjs/common` | `>=10.0.0` |
 | `@nestjs/core` | `>=10.0.0` |
 | `reflect-metadata` | `>=0.1.0` |
 | `rxjs` | `>=7.0.0` |
+
+### Optional (per module)
+
+```bash
+# Swagger module
+npm install @nestjs/swagger @scalar/nestjs-api-reference
+
+# Cache module
+npm install @nestjs/cache-manager cache-manager keyv @keyv/valkey
+```
 
 ## Development
 
