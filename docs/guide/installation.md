@@ -20,10 +20,20 @@ pnpm add xnest-kit
 
 ## Peer Dependencies
 
-Ensure these packages are installed:
+### Required
 
 ```bash
 npm install @nestjs/common @nestjs/core reflect-metadata rxjs
+```
+
+### Optional (per module)
+
+```bash
+# Swagger module
+npm install @nestjs/swagger @scalar/nestjs-api-reference
+
+# Cache module
+npm install @nestjs/cache-manager cache-manager keyv @keyv/valkey
 ```
 
 ## Verify Installation

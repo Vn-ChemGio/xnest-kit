@@ -16,13 +16,23 @@ npm install xnest-kit
 
 ## Peer Dependencies
 
-xnest-kit requires the following peer dependencies:
+### Required
 
 ```bash
 npm install @nestjs/common @nestjs/core reflect-metadata rxjs
 ```
 
 These are typically already installed in a NestJS project.
+
+### Optional (per module)
+
+```bash
+# Swagger module
+npm install @nestjs/swagger @scalar/nestjs-api-reference
+
+# Cache module
+npm install @nestjs/cache-manager cache-manager keyv @keyv/valkey
+```
 
 ## Next Steps
 

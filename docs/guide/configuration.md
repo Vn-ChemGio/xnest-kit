@@ -20,12 +20,35 @@ configSwagger(app, {
 ### Cache Configuration
 
 ```typescript
-configCache(app, {
-  store: 'redis',
-  host: 'localhost',
-  port: 6379,
-  ttl: 60,
-});
+import { CacheModule } from 'xnest-kit/cache';
+
+@Module({
+  imports: [
+    CacheModule.forRoot({
+      stores: [
+        { provider: 'memory', namespace: 'session', ttl: 60_000 },
+        { provider: 'valkey', url: 'valkey://localhost:6379', namespace: 'cache' },
+      ],
+      ttl: 30_000,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+Or use `CACHE_URLS` env for zero-config:
+
+```env
+CACHE_URLS=|valkey://localhost:6379
+```
+
+```typescript
+import { CacheModule } from 'xnest-kit/cache';
+
+@Module({
+  imports: [CacheModule.forRoot()],
+})
+export class AppModule {}
 ```
 
 ### TypeORM Configuration
@@ -45,12 +68,8 @@ configTypeOrm(app, {
 
 It's recommended to use environment variables for sensitive configuration:
 
-```typescript
-configCache(app, {
-  store: 'redis',
-  host: process.env.REDIS_HOST || 'localhost',
-  port: parseInt(process.env.REDIS_PORT || '6379'),
-});
+```env
+CACHE_URLS=|valkey://localhost:6379
 ```
 
 ## Next Steps
