@@ -33,10 +33,18 @@ export function ApiResponses(
 
   responses.forEach((r) => merged.push(r));
 
-  return ((target: any, propertyKey?: any, descriptor?: any) => {
+  // TS can't unify ClassDecorator (1 arg) and MethodDecorator (3 args)
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion
+  return ((
+    ...args: [
+      target: object,
+      propertyKey?: string | symbol,
+      descriptor?: TypedPropertyDescriptor<unknown>,
+    ]
+  ) => {
     merged.forEach((r) => {
       const deco = ApiResponse(r, { overrideExisting: true });
-      deco(target, propertyKey, descriptor);
+      deco(...args);
     });
   }) as MethodDecorator & ClassDecorator;
 }
