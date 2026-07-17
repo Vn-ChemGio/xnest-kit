@@ -5,15 +5,14 @@
 ### Method 1: Import All Modules
 
 ```typescript
-import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, CacheModule } from 'xnest-kit';
 ```
 
 ### Method 2: Import Specific Module (Recommended)
 
 ```typescript
 import { configSwagger } from 'xnest-kit/swagger';
-import { configCache } from 'xnest-kit/cache';
-import { configTypeOrm } from 'xnest-kit/typeorm';
+import { CacheModule } from 'xnest-kit/cache';
 ```
 
 > **Tip:** Method 2 is recommended for better tree-shaking and smaller bundle sizes.
@@ -47,21 +46,10 @@ bootstrap();
 ```typescript
 import { Module } from '@nestjs/common';
 import { CacheModule } from 'xnest-kit/cache';
-import { TypeOrmModule } from 'xnest-kit/typeorm';
 
 @Module({
   imports: [
-    CacheModule.register({
-      store: 'redis',
-      host: 'localhost',
-      port: 6379,
-    }),
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      database: 'mydb',
-    }),
+    CacheModule.forRoot(), // reads CACHE_URLS env
   ],
 })
 export class AppModule {}

@@ -27,11 +27,12 @@ xnest-kit provides 15 feature modules, each with its own set of utilities and co
 ## Import All
 
 ```typescript
-import { configSwagger, configCache, configTypeOrm } from 'xnest-kit';
+import { configSwagger, CacheModule } from 'xnest-kit';
 ```
 
 ## Import Individual Module
 
 ```typescript
 import { configSwagger } from 'xnest-kit/swagger';
+import { CacheModule } from 'xnest-kit/cache';
 ```

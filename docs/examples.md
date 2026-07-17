@@ -25,15 +25,31 @@ bootstrap();
 ## Cache
 
 ```typescript
+import { Module } from '@nestjs/common';
 import { CacheModule } from 'xnest-kit/cache';
 
 @Module({
   imports: [
-    CacheModule.register({
-      store: 'redis',
-      host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      ttl: 60,
+    CacheModule.forRoot(), // reads CACHE_URLS env
+  ],
+})
+export class AppModule {}
+```
+
+Or with explicit stores:
+
+```typescript
+import { Module } from '@nestjs/common';
+import { CacheModule } from 'xnest-kit/cache';
+
+@Module({
+  imports: [
+    CacheModule.forRoot({
+      stores: [
+        { provider: 'memory', namespace: 'session', ttl: 60_000 },
+        { provider: 'valkey', url: 'valkey://localhost:6379', namespace: 'cache' },
+      ],
+      ttl: 30_000,
     }),
   ],
 })
