@@ -1,30 +1,11 @@
-/**
- * @module xnest-kit/cache
- * @description Cache utilities for NestJS.
- * Provides quick configuration for CacheManager with memory and Valkey/Redis support via Keyv.
- *
- * Supports multiple cache stores simultaneously.
- * Parses `CACHE_URLS` environment variable for zero-config setup.
- *
- * @example
- * ```typescript
- * import { configCache, CacheModule } from 'xnest-kit/cache';
- *
- * @Module({
- *   imports: [CacheModule.forRoot(configCache())],
- * })
- * export class AppModule {}
- * ```
- */
+import { isPackageInstalled } from '../utils';
+
+if (!isPackageInstalled('@nestjs/cache-manager')) {
+  throw new Error(
+    'xnest-kit/cache requires @nestjs/cache-manager to be installed',
+  );
+}
 
 export { configCache } from './config/config-cache';
-export type { CacheConfig } from './config/config-cache';
-export { parseCacheUrls } from './config/parse-cache-urls';
 export { CacheModule } from './cache.module';
-export { createMemoryStore } from './adapters/memory';
-export { createValkeyStore } from './adapters/valkey';
-export {
-  InjectPrimaryCache,
-  InjectAllCacheStores,
-  InjectCacheInstance,
-} from './decorators';
+export { CACHE_KEYV_PRIMARY, CACHE_KEYV_ALL } from '../shared/cache-keys';

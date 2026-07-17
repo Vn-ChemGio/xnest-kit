@@ -1,4 +1,4 @@
-jest.mock('@keyv/redis', () => ({
+jest.mock('@keyv/valkey', () => ({
   createKeyv: jest.fn(() => ({
     store: 'mock-redis-store',
     on: jest.fn(),

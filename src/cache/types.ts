@@ -1,4 +1,4 @@
-import type { Keyv, KeyvStoreAdapter } from 'keyv';
+import type Keyv from 'keyv';
 
 /**
  * Supported cache provider types.
@@ -34,8 +34,6 @@ export interface ConfigCacheOptions {
   isGlobal?: boolean;
   /** If true, allow non-blocking multi-store operations. Default: false. */
   nonBlocking?: boolean;
-  /** If true, suppress connection error logs. Default: false. */
-  silent?: boolean;
 }
 
 /**
@@ -53,7 +51,7 @@ export interface ParsedCacheUrl {
  */
 export interface CacheStoreInstance {
   /** The Keyv store adapter. */
-  store: Keyv | KeyvStoreAdapter;
+  store: Keyv;
   /** Provider type. */
   provider: CacheProvider;
   /** Namespace used. */

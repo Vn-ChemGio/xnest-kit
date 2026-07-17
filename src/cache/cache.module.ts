@@ -1,13 +1,9 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-
 import { Module } from '@nestjs/common';
 import type { DynamicModule, Provider } from '@nestjs/common';
-import {
-  CACHE_KEYV_PRIMARY,
-  CACHE_KEYV_ALL,
-  CACHE_INSTANCE,
-} from '../shared/cache-keys';
-import type { CacheConfig } from './config/config-cache';
+import { CacheModule as NestCacheModule } from '@nestjs/cache-manager';
+import { CACHE_KEYV_PRIMARY, CACHE_KEYV_ALL } from '../shared/cache-keys';
+import { configCache } from './config';
+import type { ConfigCacheOptions } from './types';
 
 /**
  * Cache module for NestJS.
@@ -16,10 +12,19 @@ import type { CacheConfig } from './config/config-cache';
  *
  * @example
  * ```typescript
- * import { CacheModule, configCache } from 'xnest-kit/cache';
+ * import { CacheModule } from 'xnest-kit/cache';
  *
  * @Module({
- *   imports: [CacheModule.forRoot(configCache())],
+ *   imports: [CacheModule.forRoot({ ttl: 60_000 })],
+ * })
+ * export class AppModule {}
+ * ```
+ *
+ * @example
+ * ```typescript
+ * // With no config (uses defaults / CACHE_URLS env)
+ * @Module({
+ *   imports: [CacheModule.forRoot()],
  * })
  * export class AppModule {}
  * ```
@@ -27,20 +32,17 @@ import type { CacheConfig } from './config/config-cache';
 @Module({})
 export class CacheModule {
   /**
-   * Configure cache module with a CacheConfig from configCache().
+   * Configure cache module with options for configCache().
    *
-   * @param config - Result of configCache() call.
+   * @param options - Options passed to configCache().
    * @returns DynamicModule to import in your AppModule.
    */
-  static forRoot(config: CacheConfig): DynamicModule {
-    // Lazy require — @nestjs/cache-manager is optional
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const { CacheModule: NestCacheModule } = require('@nestjs/cache-manager');
+  static forRoot(options?: ConfigCacheOptions): DynamicModule {
+    const config = configCache(options);
 
     const keyvStores = config.stores.map((s) => s.store);
     const primaryStore = config.primary.store;
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     const cacheManagerModule: DynamicModule = NestCacheModule.register({
       stores: keyvStores.length === 1 ? keyvStores[0] : keyvStores,
       ttl: config.ttl,
@@ -51,18 +53,17 @@ export class CacheModule {
     const extraProviders: Provider[] = [
       { provide: CACHE_KEYV_PRIMARY, useValue: primaryStore },
       { provide: CACHE_KEYV_ALL, useValue: keyvStores },
-      {
-        provide: CACHE_INSTANCE,
-        inject: ['CACHE_MANAGER'],
-        useFactory: (cacheManager: unknown) => cacheManager,
-      },
     ];
 
     return {
       ...cacheManagerModule,
       module: CacheModule,
       providers: [...(cacheManagerModule.providers ?? []), ...extraProviders],
-      exports: [CACHE_KEYV_PRIMARY, CACHE_KEYV_ALL, CACHE_INSTANCE],
+      exports: [
+        ...(cacheManagerModule.exports ?? []),
+        CACHE_KEYV_PRIMARY,
+        CACHE_KEYV_ALL,
+      ],
     };
   }
 }

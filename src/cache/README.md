@@ -13,7 +13,7 @@ npm install @nestjs/cache-manager cache-manager keyv
 For Valkey/Redis support:
 
 ```bash
-npm install @keyv/redis
+npm install @keyv/valkey
 ```
 
 ## Quick Start
@@ -121,23 +121,21 @@ Use these to inject cache stores in any module.
 |-------|------|-------------|
 | `CACHE_KEYV_PRIMARY` | `Keyv` | Primary (first/fastest) Keyv store |
 | `CACHE_KEYV_ALL` | `Keyv[]` | All Keyv stores in order |
-| `CACHE_INSTANCE` | `Cache` | NestJS Cache instance (cache-manager) |
 
-### Decorators
+### Injection
 
 ```typescript
-import { InjectPrimaryCache, InjectAllCacheStores, InjectCacheInstance } from 'xnest-kit/cache';
+import { Inject } from '@nestjs/common';
+import { CACHE_KEYV_PRIMARY, CACHE_KEYV_ALL } from 'xnest-kit/cache';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
 
 @Injectable()
 export class UserService {
-  @InjectPrimaryCache()
-  private cache!: Keyv;
-
-  @InjectAllCacheStores()
-  private stores!: Keyv[];
-
-  @InjectCacheInstance()
-  private nestCache!: Cache;
+  constructor(
+    @Inject(CACHE_KEYV_PRIMARY) private cache: Keyv,
+    @Inject(CACHE_KEYV_ALL) private stores: Keyv[],
+    @Inject(CACHE_MANAGER) private nestCache: Cache,
+  ) {}
 }
 ```
 
@@ -180,6 +178,6 @@ const store = createMemoryStore('sessions', 60_000);
 import { createValkeyStore } from 'xnest-kit/cache';
 
 const store = createValkeyStore('redis://localhost:6379', 'cache');
-// store.store → Keyv instance backed by @keyv/redis
+// store.store → Keyv instance backed by @keyv/valkey
 // store.provider → 'valkey'
 ```

@@ -46,7 +46,6 @@ export function configCache(options: ConfigCacheOptions = {}): CacheConfig {
     ttl,
     isGlobal = true,
     nonBlocking = false,
-    silent = false,
   } = options;
 
   // Parse from env or use provided options
@@ -57,28 +56,17 @@ export function configCache(options: ConfigCacheOptions = {}): CacheConfig {
   const instances: CacheStoreInstance[] = [];
 
   for (const storeOpt of resolvedStores) {
-    try {
-      const instance = createStoreInstance(storeOpt);
-      instances.push(instance);
-      if (!silent) {
-        logger.log(
-          `Cache store [${instance.provider}] namespace=${instance.namespace} initialized`,
-        );
-      }
-    } catch (error) {
-      if (!silent) {
-        logger.error(
-          `Failed to create cache store [${storeOpt.provider}]: ${(error as Error).message}`,
-        );
-      }
-    }
+    const instance = createStoreInstance(storeOpt);
+    instances.push(instance);
+    logger.log(
+      `Cache store [${instance.provider}] namespace=${instance.namespace} initialized`,
+    );
   }
 
   if (instances.length === 0) {
-    if (!silent) {
-      logger.warn('No cache stores initialized, falling back to memory');
-    }
-    instances.push(createMemoryStore());
+    throw new Error(
+      '[xnest-kit/cache] No cache stores initialized. Check your CACHE_URLS env or store options.',
+    );
   }
 
   return {

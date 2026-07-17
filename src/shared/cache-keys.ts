@@ -34,19 +34,3 @@ export const CACHE_KEYV_PRIMARY = 'CACHE_KEYV_PRIMARY';
  * ```
  */
 export const CACHE_KEYV_ALL = 'CACHE_KEYV_ALL';
-
-/**
- * Inject the NestJS Cache instance (from cache-manager).
- * Use this for standard get/set/del operations.
- *
- * @example
- * ```typescript
- * import { CACHE_INSTANCE } from 'xnest-kit/cache';
- *
- * @Injectable()
- * export class UserService {
- *   constructor(@Inject(CACHE_INSTANCE) private cache: Cache) {}
- * }
- * ```
- */
-export const CACHE_INSTANCE = 'CACHE_INSTANCE';
