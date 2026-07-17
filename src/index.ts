@@ -1,6 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /**
  * @module xnest-kit
  * @description A modular, production-ready NestJS toolkit.
@@ -30,10 +27,11 @@ import { isPackageInstalled } from './utils';
  * If not installed, swagger exports are silently skipped.
  */
 if (isPackageInstalled('@nestjs/swagger')) {
-  const swagger = require('./swagger');
-  Object.keys(swagger).forEach((key: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const swagger = require('./swagger') as Record<string, unknown>;
+  Object.keys(swagger).forEach((key) => {
     Object.defineProperty(exports, key, {
-      get: () => swagger[key] as unknown,
+      get: () => swagger[key],
       enumerable: true,
     });
   });
