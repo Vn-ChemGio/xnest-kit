@@ -37,8 +37,18 @@ if (isPackageInstalled('@nestjs/swagger')) {
   });
 }
 
+if (isPackageInstalled('typeorm')) {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const typeorm = require('./typeorm') as Record<string, unknown>;
+  Object.keys(typeorm).forEach((key) => {
+    Object.defineProperty(exports, key, {
+      get: () => typeorm[key],
+      enumerable: true,
+    });
+  });
+}
+
 export * from './cache';
-export * from './typeorm';
 export * from './queue';
 export * from './validation';
 export * from './notification';
