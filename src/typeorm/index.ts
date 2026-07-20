@@ -32,3 +32,12 @@ export type {
   HalfIndexOptions,
   ColumnOptions,
 } from './decorators';
+export { Filterable, ParsedQuery } from './decorators';
+export { buildQuery, validateQuery } from './query';
+export type {
+  BuildQueryOptions,
+  BuildQueryResult,
+  DotNotationKey,
+  QueryOperator,
+  RawQueryParams,
+} from './query';

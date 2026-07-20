@@ -18,3 +18,4 @@ export {
   XEnum,
 } from './columns';
 export type { ColumnOptions } from './columns';
+export { Filterable, ParsedQuery } from './filterable.decorator';
