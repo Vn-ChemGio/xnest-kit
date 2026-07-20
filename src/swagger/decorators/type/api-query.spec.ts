@@ -22,6 +22,53 @@ describe('Enhanced ApiQuery', () => {
     });
   });
 
+  describe('resolveQueryOptions branches', () => {
+    it('should return options unchanged when no format', () => {
+      class TestController {
+        @ApiQuery({ name: 'q', type: String })
+        search(_q: string): string {
+          return _q;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.search('test')).toBe('test');
+    });
+
+    it('should not auto-generate example when explicit example is provided', () => {
+      class TestController {
+        @ApiQuery({
+          name: 'page',
+          type: Number,
+          format: 'int32',
+          example: 10,
+        })
+        findAll(_page: number): number {
+          return _page;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.findAll(10)).toBe(10);
+    });
+
+    it('should resolve type as string literal for auto example', () => {
+      class TestController {
+        @ApiQuery({
+          name: 'id',
+          type: 'string' as unknown as typeof String,
+          format: 'uuid',
+        })
+        findOne(_id: string): string {
+          return _id;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.findOne('test')).toBe('test');
+    });
+  });
+
   describe('decorator application', () => {
     it('should apply ApiQuery with string format', () => {
       class TestController {

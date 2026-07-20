@@ -65,6 +65,15 @@ describe('ApiResponse', () => {
     expect(typeof decorator).toBe('function');
   });
 
+  it('should apply as class decorator (no propertyKey)', () => {
+    @ApiResponse({ description: 'Class-level response' })
+    class TestController {
+      find() {}
+    }
+
+    expect(TestController).toBeDefined();
+  });
+
   it('should support PaginatedType', () => {
     class TestController {
       @ApiResponse({ type: PaginatedType(User) })

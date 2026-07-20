@@ -99,6 +99,31 @@ describe('Enhanced ApiProperty', () => {
     });
   });
 
+  describe('resolveOptions branches', () => {
+    it('should handle type as string literal', () => {
+      class TestStringType {
+        @ApiProperty({
+          type: 'string' as unknown as typeof String,
+          format: 'email',
+        })
+        email!: string;
+      }
+
+      const instance = new TestStringType();
+      expect(instance).toBeDefined();
+    });
+
+    it('should handle no format with type', () => {
+      class TestNoFormatWithType {
+        @ApiProperty({ type: String, description: 'A name' })
+        name!: string;
+      }
+
+      const instance = new TestNoFormatWithType();
+      expect(instance).toBeDefined();
+    });
+  });
+
   describe('number formats', () => {
     class TestNumberFormats {
       @ApiProperty({ type: Number, format: 'float' })

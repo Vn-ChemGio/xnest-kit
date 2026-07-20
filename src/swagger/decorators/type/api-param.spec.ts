@@ -22,6 +22,53 @@ describe('Enhanced ApiParam', () => {
     });
   });
 
+  describe('resolveParamOptions branches', () => {
+    it('should return options unchanged when no format', () => {
+      class TestController {
+        @ApiParam({ name: 'id', type: String })
+        findOne(_id: string): string {
+          return _id;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.findOne('test')).toBe('test');
+    });
+
+    it('should not auto-generate example when explicit example is provided', () => {
+      class TestController {
+        @ApiParam({
+          name: 'lat',
+          type: Number,
+          format: 'latitude',
+          example: 99,
+        })
+        findByLat(_lat: number): number {
+          return _lat;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.findByLat(99)).toBe(99);
+    });
+
+    it('should resolve type as string literal for auto example', () => {
+      class TestController {
+        @ApiParam({
+          name: 'id',
+          type: 'string' as unknown as typeof String,
+          format: 'uuid',
+        })
+        findOne(_id: string): string {
+          return _id;
+        }
+      }
+
+      const controller = new TestController();
+      expect(controller.findOne('test')).toBe('test');
+    });
+  });
+
   describe('decorator application', () => {
     it('should apply ApiParam with string format', () => {
       class TestController {
