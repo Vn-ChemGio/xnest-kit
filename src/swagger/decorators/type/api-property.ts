@@ -166,10 +166,10 @@ function createEnhancedDecorator(
  * }
  * ```
  */
-export function ApiProperty(options: StringFormatProps): PropertyDecorator;
-export function ApiProperty(options: NumberFormatProps): PropertyDecorator;
-export function ApiProperty(options: BooleanFormatProps): PropertyDecorator;
-export function ApiProperty(options: NoFormatProps): PropertyDecorator;
+export function ApiProperty(options?: StringFormatProps): PropertyDecorator;
+export function ApiProperty(options?: NumberFormatProps): PropertyDecorator;
+export function ApiProperty(options?: BooleanFormatProps): PropertyDecorator;
+export function ApiProperty(options?: NoFormatProps): PropertyDecorator;
 export function ApiProperty(
   options?:
     StringFormatProps | NumberFormatProps | BooleanFormatProps | NoFormatProps,
