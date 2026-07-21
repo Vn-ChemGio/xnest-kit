@@ -34,35 +34,32 @@ export function PaginatedQuery(
 ): MethodDecorator & ClassDecorator {
   const { search = true, defaultSkip = 0, defaultTake = 10 } = options;
 
-  const queries = [
+  return ((target, propertyKey, descriptor) => {
     NestApiQuery({
       name: 'skip',
       type: Number,
       required: false,
+      enum: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
       example: defaultSkip,
       description: 'Number of items to skip',
-    }),
+    })(target, propertyKey, descriptor);
+
     NestApiQuery({
       name: 'take',
       type: Number,
       required: false,
+      enum: [10, 20, 50, 100],
       example: defaultTake,
       description: 'Number of items to take',
-    }),
-  ];
+    })(target, propertyKey, descriptor);
 
-  if (search) {
-    queries.push(
+    if (search) {
       NestApiQuery({
         name: 'search',
         type: String,
         required: false,
         description: 'Search keyword',
-      }),
-    );
-  }
-
-  return ((target, propertyKey, descriptor) => {
-    queries.forEach((deco) => deco(target, propertyKey, descriptor));
+      })(target, propertyKey, descriptor);
+    }
   }) as MethodDecorator & ClassDecorator;
 }
