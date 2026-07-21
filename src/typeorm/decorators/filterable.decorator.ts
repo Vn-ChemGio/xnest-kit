@@ -17,6 +17,63 @@ interface FilterableMetadata<T = Record<string, unknown>> {
 type ParsedQueryDecorator = () => ParameterDecorator;
 
 /**
+ * Parse bracket-notation query params into nested objects.
+ *
+ * Fastify (and some Express configs) parse `?where[name]=John` into
+ * `{ 'where[name]': 'John' }` instead of `{ where: { name: 'John' } }`.
+ * This function normalizes the flat bracket keys into proper nested objects.
+ *
+ * If no bracket keys are found, returns the original object unchanged.
+ *
+ * @param rawQuery - Raw query params from request.query
+ * @returns Normalized query with nested objects
+ *
+ * @internal
+ */
+function parseBracketNotation(
+  rawQuery: Record<string, unknown>,
+): Record<string, unknown> {
+  const hasBracketKeys = Object.keys(rawQuery).some((k) => k.includes('['));
+  if (!hasBracketKeys) return rawQuery;
+
+  const result: Record<string, unknown> = {};
+
+  for (const [key, value] of Object.entries(rawQuery)) {
+    const match = key.match(/^([^[]+)((?:\[[^\]]*\]))+$/);
+    if (!match) {
+      result[key] = value;
+      continue;
+    }
+
+    const rootKey = match[1];
+    const bracketParts = key.slice(rootKey.length);
+    const segments =
+      bracketParts.match(/\[([^\]]*)\]/g)?.map((s) => s.slice(1, -1)) ?? [];
+
+    if (!(rootKey in result)) {
+      result[rootKey] = {};
+    }
+
+    let current = result[rootKey] as Record<string, unknown>;
+    for (let i = 0; i < segments.length - 1; i++) {
+      const segment = segments[i];
+      if (
+        !(segment in current) ||
+        typeof current[segment] !== 'object' ||
+        current[segment] === null
+      ) {
+        current[segment] = {};
+      }
+      current = current[segment] as Record<string, unknown>;
+    }
+
+    current[segments[segments.length - 1]] = value;
+  }
+
+  return result;
+}
+
+/**
  * Method decorator that marks an endpoint as filterable via query params.
  *
  * Stores the filter configuration so that `@ParsedQuery()` can automatically
@@ -138,9 +195,13 @@ export function Filterable<T>(
  */
 export const ParsedQuery: ParsedQueryDecorator = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): FindManyOptions => {
-    const request: { query?: RawQueryParams } = ctx.switchToHttp().getRequest();
+    const request: { query?: Record<string, unknown> } = ctx
+      .switchToHttp()
+      .getRequest();
     const handler = ctx.getHandler();
     const classRef = ctx.getClass();
+
+    const logger = new Logger('ParsedQuery');
 
     const metadata = Reflect.getMetadata(
       FILTERABLE_KEY,
@@ -149,14 +210,16 @@ export const ParsedQuery: ParsedQueryDecorator = createParamDecorator(
       handler.name,
     ) as FilterableMetadata | undefined;
 
-    const query: RawQueryParams = request.query ?? {};
+    const rawQuery: Record<string, unknown> = request.query ?? {};
+    const query = parseBracketNotation(rawQuery) as RawQueryParams;
+
+    logger.debug(`Raw query params: ${JSON.stringify(query)}`);
 
     const options = metadata?.options ?? {};
     const result = buildQuery(query, options);
     const errors = validateQuery(query, options);
 
     if (errors.length > 0) {
-      const logger = new Logger('ParsedQuery');
       logger.warn(`Query validation errors: ${errors.join(', ')}`);
     }
 
