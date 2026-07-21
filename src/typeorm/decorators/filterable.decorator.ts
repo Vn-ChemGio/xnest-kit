@@ -13,6 +13,9 @@ interface FilterableMetadata<T = Record<string, unknown>> {
   options: BuildQueryOptions<T>;
 }
 
+/** Parameter decorator factory for `@ParsedQuery()`. */
+type ParsedQueryDecorator = () => ParameterDecorator;
+
 /**
  * Method decorator that marks an endpoint as filterable via query params.
  *
@@ -133,7 +136,7 @@ export function Filterable<T>(
  * }
  * ```
  */
-export const ParsedQuery = createParamDecorator(
+export const ParsedQuery: ParsedQueryDecorator = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): FindManyOptions => {
     const request: { query?: RawQueryParams } = ctx.switchToHttp().getRequest();
     const handler = ctx.getHandler();
