@@ -1,7 +1,7 @@
 import 'reflect-metadata';
-import { Logger } from '@nestjs/common';
+import { BadRequestException } from '@nestjs/common';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
-import { Like, MoreThanOrEqual } from 'typeorm';
+import { IsNull, Like, MoreThanOrEqual, Not } from 'typeorm';
 import { Filterable, ParsedQuery } from './filterable.decorator';
 import type { BuildQueryOptions } from '../query/types';
 
@@ -236,11 +236,7 @@ describe('ParsedQuery decorator', () => {
     expect(result).toEqual({ take: 20 });
   });
 
-  it('should log warnings when validation errors exist', () => {
-    const warnSpy = jest
-      .spyOn(Logger.prototype, 'warn')
-      .mockImplementation(() => {});
-
+  it('should throw BadRequestException when validation errors exist', () => {
     class TestController {
       @Filterable<TestUser>({
         searchable: ['name'],
@@ -260,9 +256,237 @@ describe('ParsedQuery decorator', () => {
       TestController,
     );
 
-    factory(undefined, ctx);
+    try {
+      factory(undefined, ctx);
+      fail('Expected BadRequestException');
+    } catch (error) {
+      expect(error).toBeInstanceOf(BadRequestException);
+      const response = (error as BadRequestException).getResponse();
+      expect(response).toHaveProperty('statusCode', 400);
+      expect(response).toHaveProperty('message');
+      expect((response as { message: string[] }).message).toEqual(
+        expect.arrayContaining([expect.stringContaining('secret')]),
+      );
+    }
+  });
 
-    expect(warnSpy).toHaveBeenCalled();
-    warnSpy.mockRestore();
+  it('should throw BadRequestException for non-searchable where field', () => {
+    class TestController {
+      @Filterable<TestUser>({
+        searchable: ['name'],
+      })
+      findAll(_query?: unknown) {}
+    }
+
+    ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+    const factory = extractFactory(TestController, 'findAll');
+    const ctx = createMockExecutionContext(
+      { where: { email: 'test@test.com' } },
+      'findAll',
+      TestController,
+    );
+
+    expect(() => factory(undefined, ctx)).toThrow(BadRequestException);
+  });
+
+  it('should not throw when all query params are valid', () => {
+    class TestController {
+      @Filterable<TestUser>({
+        searchable: ['name', 'email'],
+        like: ['name'],
+        relations: ['profile'],
+        maxTake: 50,
+      })
+      findAll(_query?: unknown) {}
+    }
+
+    ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+    const factory = extractFactory(TestController, 'findAll');
+    const ctx = createMockExecutionContext(
+      {
+        where: { name: 'John' },
+        take: '10',
+        skip: '0',
+        order: { name: 'ASC' },
+        relations: 'profile',
+      },
+      'findAll',
+      TestController,
+    );
+
+    expect(() => factory(undefined, ctx)).not.toThrow();
+  });
+
+  describe('bracket notation parsing (Fastify compatibility)', () => {
+    it('should parse flat bracket-notation where clause into nested objects', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['name'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        { 'where[name]': 'John' },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({ name: 'John' });
+    });
+
+    it('should parse nested bracket-notation operators', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['age'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        { 'where[age][gte]': '18' },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({ age: MoreThanOrEqual(18) });
+    });
+
+    it('should parse mixed bracket and non-bracket keys', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['name', 'age'],
+          like: ['name'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        { 'where[name]': 'John', take: '10' },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({ name: Like('%John%') });
+      expect(result.take).toBe(10);
+    });
+
+    it('should parse isNull false via bracket notation', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['email'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        { 'where[email][isNull]': 'false' },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({ email: Not(IsNull()) });
+    });
+
+    it('should parse deeply nested bracket notation with shared intermediate', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['profile'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        {
+          'where[profile][name]': 'John',
+          'where[profile][bio]': 'Cool',
+        },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({
+        profile: { name: 'John', bio: 'Cool' },
+      });
+    });
+
+    it('should handle multiple bracket keys with same root key', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['name', 'age'],
+          like: ['name'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        {
+          'where[name]': 'John',
+          'where[age][gte]': '18',
+        },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({
+        name: Like('%John%'),
+        age: MoreThanOrEqual(18),
+      });
+    });
+
+    it('should pass through already-nested objects unchanged', () => {
+      class TestController {
+        @Filterable<TestUser>({
+          searchable: ['name'],
+        })
+        findAll(_query?: unknown) {}
+      }
+
+      ParsedQuery()(TestController.prototype, 'findAll', 0);
+
+      const factory = extractFactory(TestController, 'findAll');
+      const ctx = createMockExecutionContext(
+        { where: { name: 'John' }, take: '10' },
+        'findAll',
+        TestController,
+      );
+
+      const result = factory(undefined, ctx) as Record<string, unknown>;
+
+      expect(result.where).toEqual({ name: 'John' });
+      expect(result.take).toBe(10);
+    });
   });
 });

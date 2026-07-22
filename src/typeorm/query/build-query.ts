@@ -119,7 +119,7 @@ function applyOperator(
     case 'not':
       return Not(coerceValue(strValue));
     case 'isNull':
-      return strValue === 'true' || strValue === '1' ? IsNull() : null;
+      return strValue === 'true' || strValue === '1' ? IsNull() : Not(IsNull());
     case 'eq':
     default:
       return coerceValue(strValue);
@@ -558,9 +558,14 @@ export function validateQuery<T>(
               break;
             case 'isNull': {
               const strVal = safeStringify(val);
-              if (strVal !== 'true' && strVal !== '1') {
+              if (
+                strVal !== 'true' &&
+                strVal !== '1' &&
+                strVal !== 'false' &&
+                strVal !== '0'
+              ) {
                 errors.push(
-                  `where.${key}.${op}: isNull value must be 'true' or '1', got '${strVal}'`,
+                  `where.${key}.${op}: isNull value must be 'true', '1', 'false', or '0', got '${strVal}'`,
                 );
               }
               break;

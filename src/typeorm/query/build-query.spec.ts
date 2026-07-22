@@ -404,12 +404,20 @@ describe('buildQuery', () => {
       expect(result.where).toEqual({ deletedAt: IsNull() });
     });
 
-    it('should return null for isNull with falsy value', () => {
+    it('should return Not(IsNull()) for isNull with "false"', () => {
       const result = buildQuery<TestEntity>(
         { where: { deletedAt: { isNull: 'false' } } },
         defaultOptions,
       );
-      expect(result.where).toEqual({ deletedAt: null });
+      expect(result.where).toEqual({ deletedAt: Not(IsNull()) });
+    });
+
+    it('should return Not(IsNull()) for isNull with "0"', () => {
+      const result = buildQuery<TestEntity>(
+        { where: { deletedAt: { isNull: '0' } } },
+        defaultOptions,
+      );
+      expect(result.where).toEqual({ deletedAt: Not(IsNull()) });
     });
 
     it('should apply eq operator explicitly', () => {
@@ -825,7 +833,7 @@ describe('validateQuery', () => {
         { searchable: ['deletedAt'] },
       );
       expect(errors).toEqual([
-        "where.deletedAt.isNull: isNull value must be 'true' or '1', got 'no'",
+        "where.deletedAt.isNull: isNull value must be 'true', '1', 'false', or '0', got 'no'",
       ]);
     });
 
@@ -840,6 +848,22 @@ describe('validateQuery', () => {
     it('should not error on valid isNull', () => {
       const errors = validateQuery<TestEntity>(
         { where: { deletedAt: { isNull: 'true' } } },
+        { searchable: ['deletedAt'] },
+      );
+      expect(errors).toEqual([]);
+    });
+
+    it('should not error on valid isNull with "false"', () => {
+      const errors = validateQuery<TestEntity>(
+        { where: { deletedAt: { isNull: 'false' } } },
+        { searchable: ['deletedAt'] },
+      );
+      expect(errors).toEqual([]);
+    });
+
+    it('should not error on valid isNull with "0"', () => {
+      const errors = validateQuery<TestEntity>(
+        { where: { deletedAt: { isNull: '0' } } },
         { searchable: ['deletedAt'] },
       );
       expect(errors).toEqual([]);
