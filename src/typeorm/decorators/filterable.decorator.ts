@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   createParamDecorator,
   type ExecutionContext,
   Logger,
@@ -220,7 +221,7 @@ export const ParsedQuery: ParsedQueryDecorator = createParamDecorator(
     const errors = validateQuery(query, options);
 
     if (errors.length > 0) {
-      logger.warn(`Query validation errors: ${errors.join(', ')}`);
+      throw new BadRequestException(errors);
     }
 
     return result;
