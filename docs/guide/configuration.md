@@ -54,14 +54,38 @@ export class AppModule {}
 ### TypeORM Configuration
 
 ```typescript
-configTypeOrm(app, {
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  database: 'mydb',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: true,
-});
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from 'xnest-kit/typeorm';
+
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      database: 'mydb',
+      entities: [__dirname + '/**/*.entity{.ts,.js}'],
+      synchronize: true,
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+Or use `DATABASE_URL` env for zero-config:
+
+```env
+DATABASE_URL=postgres://user:pass@localhost:5432/mydb
+```
+
+```typescript
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from 'xnest-kit/typeorm';
+
+@Module({
+  imports: [TypeOrmModule.forRoot()],
+})
+export class AppModule {}
 ```
 
 ## Environment Variables

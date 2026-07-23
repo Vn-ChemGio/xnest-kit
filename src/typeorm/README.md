@@ -1,18 +1,8 @@
-# typeorm
+# xnest-kit/typeorm
 
-> TypeORM utilities for NestJS — config resolution, entity decorators, query builder, and transaction management.
+TypeORM utilities for NestJS — config resolution, entity decorators, query builder, and transaction management.
 
-## Status
-
-![](https://img.shields.io/badge/stable-brightgreen)
-
-## Installation
-
-```bash
-npm install xnest-kit
-```
-
-## Peer Dependencies
+## Prerequisites
 
 ```bash
 npm install typeorm @nestjs/typeorm
@@ -29,8 +19,6 @@ import { TypeOrmModule } from 'xnest-kit/typeorm';
 })
 export class AppModule {}
 ```
-
----
 
 ## Table of Contents
 
@@ -52,8 +40,6 @@ Wraps `@nestjs/typeorm` with automatic env resolution.
 ```typescript
 TypeOrmModule.forRoot(options?): DynamicModule
 ```
-
-**Options:**
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -125,8 +111,6 @@ Enhanced `@Entity` decorator with auto-applied soft delete and timestamps.
 ```typescript
 @XEntity(tableName?, options?): ClassDecorator
 ```
-
-**Options:**
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
@@ -247,8 +231,6 @@ Partial index with `WHERE deleted_at IS NULL` — only indexes active (non-delet
 @HalfIndex(name?, options?): ClassDecorator
 ```
 
-**Options:**
-
 | Option | Type | Description |
 |--------|------|-------------|
 | `columns` | `string[]` | Column(s) to index (omit to index decorated property) |
@@ -267,7 +249,7 @@ export class User {
   @Column()
   email: string;
 }
-// -> CREATE UNIQUE INDEX ... ON users (email) WHERE deleted_at IS NULL
+// → CREATE UNIQUE INDEX ... ON users (email) WHERE deleted_at IS NULL
 
 @XEntity('orders')
 @HalfIndex('idx_order_status', { columns: ['status'] })
@@ -278,7 +260,7 @@ export class Order {
   @Column()
   status: string;
 }
-// -> CREATE INDEX idx_order_status ON orders (status) WHERE deleted_at IS NULL
+// → CREATE INDEX idx_order_status ON orders (status) WHERE deleted_at IS NULL
 ```
 
 ---
@@ -324,7 +306,7 @@ Type-safe query param parsing with whitelist filtering, operator support, and au
 #### Basic Usage
 
 ```typescript
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, UseInterceptors } from '@nestjs/common';
 import { Filterable, ParsedQuery } from 'xnest-kit/typeorm';
 import { FindManyOptions } from 'typeorm';
 
@@ -460,10 +442,10 @@ export class OrdersController {
 #### Lifecycle
 
 ```
-Request -> @UseTransaction() detected -> startTransaction()
-  -> Handler executes with @GetManager() EntityManager
-    -> Success: commitTransaction() -> release()
-    -> Error: rollbackTransaction() -> release() -> re-throw
+Request → @UseTransaction() detected → startTransaction()
+  → Handler executes with @GetManager() EntityManager
+    → Success: commitTransaction() → release()
+    → Error: rollbackTransaction() → release() → re-throw
 ```
 
 - **No `@UseTransaction()`** — handler executes normally (no transaction)
