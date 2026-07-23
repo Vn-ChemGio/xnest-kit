@@ -34,7 +34,7 @@
 |--------|-------------|--------|
 | [swagger](./src/swagger) | Swagger/Scalar config & decorators | ![](https://img.shields.io/badge/stable-brightgreen) |
 | [cache](./src/cache) | CacheManager with Redis/Valkey | ![](https://img.shields.io/badge/stable-brightgreen) |
-| [typeorm](./src/typeorm) | TypeORM config & entity decorators | ![](https://img.shields.io/badge/alpha-orange) |
+| [typeorm](./src/typeorm) | TypeORM config, entity decorators, query builder, transactions | ![](https://img.shields.io/badge/stable-brightgreen) |
 | [queue](./src/queue) | BullMQ config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [validation](./src/validation) | Request validation with i18n | ![](https://img.shields.io/badge/alpha-orange) |
 | [notification](./src/notification) | Multi-adapter notifications | ![](https://img.shields.io/badge/alpha-orange) |
@@ -119,16 +119,39 @@ export class AppModule {}
 ### TypeORM
 
 ```typescript
-import { configTypeOrm } from 'xnest-kit/typeorm';
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from 'xnest-kit/typeorm';
 
-configTypeOrm(app, {
-  type: 'postgres',
-  host: 'localhost',
-  port: 5432,
-  database: 'mydb',
-  entities: [__dirname + '/**/*.entity{.ts,.js}'],
-  synchronize: true,
-});
+@Module({
+  imports: [TypeOrmModule.forRoot()], // reads DATABASE_URL env
+})
+export class AppModule {}
+```
+
+```typescript
+import { UseInterceptors, Controller, Get, Post, Body } from '@nestjs/common';
+import { Filterable, ParsedQuery, UseTransaction, GetManager, TransactionInterceptor } from 'xnest-kit/typeorm';
+
+@Controller('users')
+@UseInterceptors(TransactionInterceptor)
+export class UsersController {
+  @Get()
+  @Filterable<User>({
+    searchable: ['name', 'email', 'age'],
+    like: ['name', 'email'],
+    relations: ['profile'],
+    maxTake: 100,
+  })
+  async findAll(@ParsedQuery() query: FindManyOptions<User>) {
+    return this.userService.find(query);
+  }
+
+  @Post()
+  @UseTransaction({ isolation: 'SERIALIZABLE' })
+  async create(@GetManager() em: EntityManager, @Body() dto: CreateUserDto) {
+    return em.save(em.create(User, dto));
+  }
+}
 ```
 
 ### Excel Processing
@@ -170,6 +193,9 @@ npm install @nestjs/swagger @scalar/nestjs-api-reference
 
 # Cache module
 npm install @nestjs/cache-manager cache-manager keyv @keyv/valkey
+
+# TypeORM module
+npm install typeorm @nestjs/typeorm
 ```
 
 ## Development
