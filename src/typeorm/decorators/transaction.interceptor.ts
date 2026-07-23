@@ -6,7 +6,7 @@ import {
   type NestInterceptor,
 } from '@nestjs/common';
 import { DataSource, type QueryRunner } from 'typeorm';
-import { type Observable, from, switchMap } from 'rxjs';
+import { Observable } from 'rxjs';
 import {
   TRANSACTION_MANAGER_KEY,
   TRANSACTION_OPTIONS_KEY,
@@ -47,9 +47,14 @@ export class TransactionInterceptor implements NestInterceptor {
   ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+    const handler = context.getHandler();
+    const classRef = context.getClass();
+
     const options = Reflect.getMetadata(
       TRANSACTION_OPTIONS_KEY,
-      context.getHandler(),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+      classRef.prototype,
+      handler.name,
     ) as TransactionOptions | undefined;
 
     if (!options) {
@@ -58,29 +63,49 @@ export class TransactionInterceptor implements NestInterceptor {
 
     const queryRunner = this.dataSource.createQueryRunner();
 
-    return from(queryRunner.startTransaction(options.isolation)).pipe(
-      switchMap(() => {
-        this.attachManager(context, queryRunner);
+    return new Observable((subscriber) => {
+      let handlerSubscription: { unsubscribe(): void } | undefined;
 
-        return next.handle().pipe(
-          switchMap((value) =>
-            from(queryRunner.commitTransaction()).pipe(
-              switchMap(() =>
-                from(queryRunner.release()).pipe(
-                  switchMap(() => [value] as unknown[]),
-                ),
-              ),
-            ),
-          ),
+      queryRunner
+        .startTransaction(options.isolation)
+        .then(() => {
+          this.attachManager(context, queryRunner);
 
-          switchMap(async (err: unknown) => {
-            await queryRunner.rollbackTransaction().catch(() => {});
-            await queryRunner.release().catch(() => {});
-            throw err;
-          }),
-        );
-      }),
-    );
+          handlerSubscription = next.handle().subscribe({
+            next: (value) => subscriber.next(value),
+            error: (err: unknown) => {
+              queryRunner
+                .rollbackTransaction()
+                .catch(() => {})
+                .finally(() => {
+                  queryRunner.release().catch(() => {});
+                  subscriber.error(err);
+                });
+            },
+            complete: () => {
+              queryRunner
+                .commitTransaction()
+                .then(() => {
+                  queryRunner.release().catch(() => {});
+                  subscriber.complete();
+                })
+                .catch((err: unknown) => {
+                  queryRunner.release().catch(() => {});
+                  subscriber.error(err);
+                });
+            },
+          });
+        })
+        .catch((err: unknown) => {
+          queryRunner.release().catch(() => {});
+          subscriber.error(err);
+        });
+
+      return () => {
+        handlerSubscription?.unsubscribe();
+        queryRunner.release().catch(() => {});
+      };
+    });
   }
 
   /**

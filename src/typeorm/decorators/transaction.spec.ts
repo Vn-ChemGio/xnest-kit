@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 import 'reflect-metadata';
+import { type ExecutionContext } from '@nestjs/common';
 import { ROUTE_ARGS_METADATA } from '@nestjs/common/constants';
 import { DataSource, type QueryRunner, type EntityManager } from 'typeorm';
 import {
@@ -9,34 +10,51 @@ import {
   TRANSACTION_MANAGER_KEY,
 } from './transaction.decorator';
 import { TransactionInterceptor } from './transaction.interceptor';
-import { Observable, of, throwError } from 'rxjs';
-import { lastValueFrom } from 'rxjs';
+import { of, throwError, lastValueFrom } from 'rxjs';
 
 const MOCK_EM = { save: jest.fn() } as unknown as EntityManager;
 
 function createMockQueryRunner(overrides?: Partial<QueryRunner>): QueryRunner {
   return {
-    startTransaction: jest.fn(),
-    commitTransaction: jest.fn(),
-    rollbackTransaction: jest.fn(),
-    release: jest.fn(),
+    startTransaction: jest.fn().mockResolvedValue(undefined),
+    commitTransaction: jest.fn().mockResolvedValue(undefined),
+    rollbackTransaction: jest.fn().mockResolvedValue(undefined),
+    release: jest.fn().mockResolvedValue(undefined),
     manager: MOCK_EM,
     ...overrides,
   } as unknown as QueryRunner;
 }
 
+type AnyClass = new (...args: unknown[]) => unknown;
+
 function createMockContext(
   handler?: () => void,
   request?: Record<string, unknown>,
-) {
+  classRef?: AnyClass,
+): ExecutionContext {
   const fn = handler ?? (() => {});
   return {
     switchToHttp: () => ({
       getRequest: () => request ?? {},
+      getResponse: () => ({}),
+      getNext: () => ({}),
     }),
     getHandler: () => fn,
-    getClass: () => class {},
-  };
+    getClass: () => classRef ?? class {},
+    getArgs: () => [],
+    getArgByIndex: () => ({}),
+    switchToRpc: () => ({
+      getContext: () => ({}),
+      getRpcContext: () => ({}),
+      getData: () => ({}),
+    }),
+    switchToWs: () => ({
+      getData: () => ({}),
+      getClient: () => ({}),
+      getPattern: () => '',
+    }),
+    getType: () => 'http',
+  } as unknown as ExecutionContext;
 }
 
 function extractFactory(
@@ -193,6 +211,7 @@ describe('TransactionInterceptor', () => {
     const ctx = createMockContext(
       getHandler(Controller.prototype, 'findAll'),
       request,
+      Controller,
     );
 
     const result = await lastValueFrom(
@@ -216,7 +235,11 @@ describe('TransactionInterceptor', () => {
     });
     const interceptor = new TransactionInterceptor(dataSource);
     const handler = { handle: jest.fn().mockReturnValue(of('result')) };
-    const ctx = createMockContext(getHandler(Controller.prototype, 'findAll'));
+    const ctx = createMockContext(
+      getHandler(Controller.prototype, 'findAll'),
+      undefined,
+      Controller,
+    );
 
     await lastValueFrom(interceptor.intercept(ctx, handler as never));
 
@@ -233,7 +256,11 @@ describe('TransactionInterceptor', () => {
     const handler = {
       handle: jest.fn().mockReturnValue(throwError(() => error)),
     };
-    const ctx = createMockContext(getHandler(Controller.prototype, 'findAll'));
+    const ctx = createMockContext(
+      getHandler(Controller.prototype, 'findAll'),
+      undefined,
+      Controller,
+    );
 
     await expect(
       lastValueFrom(interceptor.intercept(ctx, handler as never)),
@@ -259,7 +286,11 @@ describe('TransactionInterceptor', () => {
         .fn()
         .mockReturnValue(throwError(() => new Error('DB error'))),
     };
-    const ctx = createMockContext(getHandler(Controller.prototype, 'findAll'));
+    const ctx = createMockContext(
+      getHandler(Controller.prototype, 'findAll'),
+      undefined,
+      Controller,
+    );
 
     await expect(
       lastValueFrom(interceptor.intercept(ctx, handler as never)),
@@ -279,6 +310,7 @@ describe('TransactionInterceptor', () => {
     const ctx = createMockContext(
       getHandler(Controller.prototype, 'findAll'),
       request,
+      Controller,
     );
 
     await lastValueFrom(interceptor.intercept(ctx, handler as never));

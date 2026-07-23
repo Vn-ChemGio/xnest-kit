@@ -33,6 +33,14 @@ export type {
   ColumnOptions,
 } from './decorators';
 export { Filterable, ParsedQuery } from './decorators';
+export {
+  UseTransaction,
+  GetManager,
+  TransactionInterceptor,
+  TRANSACTION_OPTIONS_KEY,
+  TRANSACTION_MANAGER_KEY,
+} from './decorators';
+export type { TransactionOptions } from './decorators';
 export { buildQuery, validateQuery } from './query';
 export type {
   BuildQueryOptions,
