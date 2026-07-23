@@ -7,7 +7,7 @@
 - [API Reference](/api/)
   - [swagger](/api/openapi.md) ![](https://img.shields.io/badge/stable-brightgreen)
   - [cache](/api/cache.md) ![](https://img.shields.io/badge/stable-brightgreen)
-  - [typeorm](/api/typeorm.md)
+  - [typeorm](/api/typeorm.md) ![](https://img.shields.io/badge/stable-brightgreen)
   - [queue](/api/queue.md)
   - [validation](/api/validation.md)
   - [notification](/api/notification.md)
