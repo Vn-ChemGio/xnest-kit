@@ -94,6 +94,66 @@
       "types": "./dist/notification/index.d.ts",
       "default": "./dist/notification/index.js"
     },
+    "./notification/typeorm": {
+      "types": "./dist/notification/typeorm/index.d.ts",
+      "default": "./dist/notification/typeorm/index.js"
+    },
+    "./notification/channel/email": {
+      "types": "./dist/notification/channels/email/nodemailer.provider.d.ts",
+      "default": "./dist/notification/channels/email/nodemailer.provider.js"
+    },
+    "./notification/channel/sms": {
+      "types": "./dist/notification/channels/sms/twilio.provider.d.ts",
+      "default": "./dist/notification/channels/sms/twilio.provider.js"
+    },
+    "./notification/channel/push": {
+      "types": "./dist/notification/channels/push/fcm.provider.d.ts",
+      "default": "./dist/notification/channels/push/fcm.provider.js"
+    },
+    "./notification/channel/telegram": {
+      "types": "./dist/notification/channels/telegram/telegram.provider.d.ts",
+      "default": "./dist/notification/channels/telegram/telegram.provider.js"
+    },
+    "./notification/channel/slack": {
+      "types": "./dist/notification/channels/slack/slack.provider.d.ts",
+      "default": "./dist/notification/channels/slack/slack.provider.js"
+    },
+    "./notification/channel/teams": {
+      "types": "./dist/notification/channels/teams/teams.provider.d.ts",
+      "default": "./dist/notification/channels/teams/teams.provider.js"
+    },
+    "./notification/channel/googlechat": {
+      "types": "./dist/notification/channels/googlechat/googlechat.provider.d.ts",
+      "default": "./dist/notification/channels/googlechat/googlechat.provider.js"
+    },
+    "./notification/channel/whatsapp": {
+      "types": "./dist/notification/channels/whatsapp/whatsapp.provider.d.ts",
+      "default": "./dist/notification/channels/whatsapp/whatsapp.provider.js"
+    },
+    "./notification/channel/viber": {
+      "types": "./dist/notification/channels/viber/viber.provider.d.ts",
+      "default": "./dist/notification/channels/viber/viber.provider.js"
+    },
+    "./notification/channel/line": {
+      "types": "./dist/notification/channels/line/line.provider.d.ts",
+      "default": "./dist/notification/channels/line/line.provider.js"
+    },
+    "./notification/channel/webpush": {
+      "types": "./dist/notification/channels/webpush/webpush.provider.d.ts",
+      "default": "./dist/notification/channels/webpush/webpush.provider.js"
+    },
+    "./notification/channel/inapp": {
+      "types": "./dist/notification/channels/inapp/inapp.provider.d.ts",
+      "default": "./dist/notification/channels/inapp/inapp.provider.js"
+    },
+    "./notification/channel/discord": {
+      "types": "./dist/notification/channels/discord/discord.provider.d.ts",
+      "default": "./dist/notification/channels/discord/discord.provider.js"
+    },
+    "./notification/channel/wechat": {
+      "types": "./dist/notification/channels/wechat/wechat.provider.d.ts",
+      "default": "./dist/notification/channels/wechat/wechat.provider.js"
+    },
     "./activity-feed": {
       "types": "./dist/activity-feed/index.d.ts",
       "default": "./dist/activity-feed/index.js"

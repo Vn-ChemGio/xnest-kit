@@ -48,6 +48,11 @@ if (isPackageInstalled('typeorm')) {
   });
 }
 
+export {
+  isPackageInstalled,
+  assertPackageInstalled,
+  lazyImport,
+} from './utils';
 export * from './cache';
 export * from './queue';
 export * from './validation';

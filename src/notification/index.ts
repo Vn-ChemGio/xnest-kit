@@ -1,81 +1,143 @@
 /**
  * @module xnest-kit/notification
- * @description Notification utilities for NestJS.
- * Provides multi-adapter notification support (email, SMS, push)
- * with professional features like queuing, logging, and retry.
+ * @description Multi-channel notification module for NestJS.
+ *
+ * Supports 14 channels with pluggable providers, optional queuing,
+ * and persistence.
  *
  * @example
  * ```typescript
- * import { configNotification } from 'xnest-kit/notification';
+ * import { NotificationModule, NotificationService } from 'xnest-kit/notification';
  *
- * const app = await NestFactory.create(AppModule);
- * configNotification(app, { adapters: ['email', 'sms'] });
+ * @Module({
+ *   imports: [
+ *     NotificationModule.forRoot({
+ *       providers: {
+ *         email: [new SmtpEmailProvider({ host: 'smtp.example.com' })],
+ *       },
+ *     }),
+ *   ],
+ * })
+ * export class AppModule {}
  * ```
  */
 
-import { Module } from '@nestjs/common';
+// ── Keys ──────────────────────────────────────────────────────────────────
+export {
+  NOTIFICATION_MODULE_OPTIONS,
+  NOTIFICATION_QUEUE,
+  NOTIFICATION_STORE,
+  NOTIFICATION_EMAIL_PROVIDER,
+  NOTIFICATION_SMS_PROVIDER,
+  NOTIFICATION_PUSH_PROVIDER,
+  NOTIFICATION_TELEGRAM_PROVIDER,
+  NOTIFICATION_SLACK_PROVIDER,
+  NOTIFICATION_TEAMS_PROVIDER,
+  NOTIFICATION_GOOGLECHAT_PROVIDER,
+  NOTIFICATION_WHATSAPP_PROVIDER,
+  NOTIFICATION_VIBER_PROVIDER,
+  NOTIFICATION_LINE_PROVIDER,
+  NOTIFICATION_WEBPUSH_PROVIDER,
+  NOTIFICATION_INAPP_PROVIDER,
+  NOTIFICATION_DISCORD_PROVIDER,
+  NOTIFICATION_WECHAT_PROVIDER,
+  notificationProviderToken,
+} from '../shared/notification-keys';
 
-/**
- * Stub: Notification module.
- * @description Will provide multi-adapter notification with queuing, logging, retry.
- * @throws {Error} Not yet implemented.
- */
-@Module({})
-export class NotificationModule {
-  constructor() {
-    throw new Error(
-      '[xnest-kit/notification] NotificationModule is not yet implemented. Coming in v0.1.0-alpha.',
-    );
-  }
-}
+// ── Constants & Provider interface ────────────────────────────────────────
+export type {
+  NotificationProvider,
+  ProviderResult,
+} from './notification.constants';
 
-/**
- * Stub: Configure notification system for a NestJS application.
- * @param _app - The NestJS application instance.
- * @param _options - Notification configuration (adapters, providers, retry, etc.).
- * @throws {Error} Not yet implemented.
- */
-export function configNotification(
-  _app?: never,
-  _options?: Record<string, unknown>,
-): never {
-  throw new Error(
-    '[xnest-kit/notification] configNotification() is not yet implemented. Coming in v0.1.0-alpha.',
-  );
-}
+// ── Types ────────────────────────────────────────────────────────────────
+export type {
+  ChannelType,
+  ProviderSendResult,
+  ChannelResult,
+  NotificationResult,
+  SendInput,
+  ChannelSendInput,
+  NotificationRecord,
+  NotificationStore,
+  NotificationModuleOptions,
+  NotificationModuleAsyncOptions,
+} from './notification.type';
 
-/**
- * Stub: Email notification adapter.
- * @throws {Error} Not yet implemented.
- */
-export class EmailAdapter {
-  constructor() {
-    throw new Error(
-      '[xnest-kit/notification] EmailAdapter is not yet implemented. Coming in v0.1.0-alpha.',
-    );
-  }
-}
+// ── Channel types ────────────────────────────────────────────────────────
+export type { EmailSendInput } from './channels/email';
+export type { SmsSendInput } from './channels/sms';
+export type { PushSendInput } from './channels/push';
+export type { TelegramSendInput } from './channels/telegram';
+export type { SlackSendInput } from './channels/slack';
+export type { TeamsSendInput } from './channels/teams';
+export type { GoogleChatSendInput } from './channels/googlechat';
+export type { WhatsAppSendInput } from './channels/whatsapp';
+export type { ViberSendInput } from './channels/viber';
+export type { LineSendInput } from './channels/line';
+export type { WebPushSendInput } from './channels/webpush';
+export type { InAppSendInput } from './channels/inapp';
+export type { DiscordSendInput } from './channels/discord';
+export type { WeChatSendInput } from './channels/wechat';
 
-/**
- * Stub: SMS notification adapter.
- * @throws {Error} Not yet implemented.
- */
-export class SmsAdapter {
-  constructor() {
-    throw new Error(
-      '[xnest-kit/notification] SmsAdapter is not yet implemented. Coming in v0.1.0-alpha.',
-    );
-  }
-}
+// ── Channel providers ────────────────────────────────────────────────────
+export {
+  NodemailerEmailProvider,
+  isNodemailerInstalled,
+} from './channels/email';
+export type { NodemailerEmailProviderConfig } from './channels/email';
 
-/**
- * Stub: Push notification adapter.
- * @throws {Error} Not yet implemented.
- */
-export class PushAdapter {
-  constructor() {
-    throw new Error(
-      '[xnest-kit/notification] PushAdapter is not yet implemented. Coming in v0.1.0-alpha.',
-    );
-  }
-}
+export { TwilioSmsProvider, isTwilioInstalled } from './channels/sms';
+export type { TwilioSmsProviderConfig } from './channels/sms';
+
+export { FcmPushProvider, isFirebaseAdminInstalled } from './channels/push';
+export type { FcmPushProviderConfig } from './channels/push';
+
+export {
+  TelegramBotProvider,
+  isTelegramBotInstalled,
+} from './channels/telegram';
+export type { TelegramBotProviderConfig } from './channels/telegram';
+
+export { SlackProvider, isSlackWebApiInstalled } from './channels/slack';
+export type { SlackProviderConfig } from './channels/slack';
+
+export { TeamsWebhookProvider } from './channels/teams';
+
+export { GoogleChatWebhookProvider } from './channels/googlechat';
+
+export { WhatsAppCloudProvider } from './channels/whatsapp';
+export type { WhatsAppCloudProviderConfig } from './channels/whatsapp';
+
+export { ViberBotProvider } from './channels/viber';
+export type { ViberBotProviderConfig } from './channels/viber';
+
+export { LineMessagingProvider } from './channels/line';
+export type { LineMessagingProviderConfig } from './channels/line';
+
+export { WebPushProvider, isWebPushInstalled } from './channels/webpush';
+export type { WebPushProviderConfig } from './channels/webpush';
+
+export { InAppSocketProvider, isSocketIoInstalled } from './channels/inapp';
+
+export {
+  DiscordWebhookProvider,
+  DiscordBotProvider,
+  isDiscordJsInstalled,
+} from './channels/discord';
+export type { DiscordBotProviderConfig } from './channels/discord';
+
+export { WeChatOfficialProvider } from './channels/wechat';
+export type { WeChatOfficialProviderConfig } from './channels/wechat';
+
+// ── Module & Service ─────────────────────────────────────────────────────
+export { NotificationModule } from './notification.module';
+export { NotificationService } from './notification.service';
+
+// ── Decorators ───────────────────────────────────────────────────────────
+export {
+  InjectNotificationOptions,
+  InjectNotificationProvider,
+  InjectNotificationStore,
+  InjectNotificationQueue,
+} from './decorators';
