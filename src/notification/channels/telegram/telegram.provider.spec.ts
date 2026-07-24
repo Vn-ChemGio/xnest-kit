@@ -21,6 +21,7 @@ const MockTelegramBot = jest.fn().mockImplementation(() => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetTelegramBot.mockReturnValue(MockTelegramBot);
 });
 

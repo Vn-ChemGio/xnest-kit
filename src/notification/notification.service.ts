@@ -7,6 +7,7 @@ import {
 import type { NotificationProvider } from './notification.constants';
 import type {
   ChannelType,
+  ChannelSendInput,
   ChannelResult,
   NotificationModuleOptions,
   NotificationRecord,
@@ -15,6 +16,20 @@ import type {
   ProviderSendResult,
   SendInput,
 } from './notification.type';
+import type { EmailSendInput } from './channels/email';
+import type { SmsSendInput } from './channels/sms';
+import type { PushSendInput } from './channels/push';
+import type { TelegramSendInput } from './channels/telegram';
+import type { SlackSendInput } from './channels/slack';
+import type { TeamsSendInput } from './channels/teams';
+import type { GoogleChatSendInput } from './channels/googlechat';
+import type { WhatsAppSendInput } from './channels/whatsapp';
+import type { ViberSendInput } from './channels/viber';
+import type { LineSendInput } from './channels/line';
+import type { WebPushSendInput } from './channels/webpush';
+import type { InAppSendInput } from './channels/inapp';
+import type { DiscordSendInput } from './channels/discord';
+import type { WeChatSendInput } from './channels/wechat';
 
 /**
  * Core notification service.
@@ -63,13 +78,87 @@ export class NotificationService {
    *
    * @param channel - The notification channel to send through.
    * @param payload - Channel-specific payload (e.g., EmailSendInput for 'email').
-   * @param template - Optional template name.
-   * @param templateData - Optional template data.
+   * @param options - Optional template configuration.
    * @returns Result with per-provider outcomes.
    */
+  async send(
+    channel: 'email',
+    payload: EmailSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'sms',
+    payload: SmsSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'push',
+    payload: PushSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'telegram',
+    payload: TelegramSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'slack',
+    payload: SlackSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'teams',
+    payload: TeamsSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'googlechat',
+    payload: GoogleChatSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'whatsapp',
+    payload: WhatsAppSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'viber',
+    payload: ViberSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'line',
+    payload: LineSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'webpush',
+    payload: WebPushSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'inapp',
+    payload: InAppSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'discord',
+    payload: DiscordSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: 'wechat',
+    payload: WeChatSendInput,
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
   async send<C extends ChannelType>(
     channel: C,
     payload: SendInput[C],
+    options?: { template?: string; templateData?: Record<string, unknown> },
+  ): Promise<NotificationResult>;
+  async send(
+    channel: ChannelType,
+    payload: ChannelSendInput,
     options?: { template?: string; templateData?: Record<string, unknown> },
   ): Promise<NotificationResult> {
     if (this.options.queue?.enabled && this.queue) {
@@ -93,7 +182,10 @@ export class NotificationService {
     )[channel];
 
     if (!providers?.length) {
-      return { success: false, channels: [], timestamp: new Date() };
+      throw new Error(
+        `No providers configured for channel "${channel}". ` +
+          `Add a provider in NotificationModule.forRoot({ providers: { ${channel}: [...] } }).`,
+      );
     }
 
     const result = await this.sendToProviders(channel, payload, providers);
@@ -242,23 +334,8 @@ export class NotificationService {
     const results: ProviderSendResult[] = [];
 
     for (const provider of providers) {
-      try {
-        const providerResult = await provider.send(message);
-        results.push({ ...providerResult, channel });
-      } catch (err: unknown) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : typeof err === 'string'
-              ? err
-              : 'Unknown error';
-        results.push({
-          success: false,
-          providerName: provider.name,
-          channel,
-          error: errorMessage,
-        });
-      }
+      const providerResult = await provider.send(message);
+      results.push({ ...providerResult, channel });
     }
 
     return { channel, results };

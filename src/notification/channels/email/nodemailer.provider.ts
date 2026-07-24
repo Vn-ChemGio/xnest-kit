@@ -72,6 +72,12 @@ export class NodemailerEmailProvider implements NotificationProvider<EmailSendIn
   constructor(private readonly config: NodemailerEmailProviderConfig) {}
 
   async send(input: EmailSendInput): Promise<ProviderResult> {
+    if (!isNodemailerInstalled()) {
+      throw new Error(
+        '[NodemailerEmailProvider] "nodemailer" is not installed. ' +
+          'Run: npm install nodemailer',
+      );
+    }
     const nodemailer = getNodemailer();
 
     this.transport = nodemailer.createTransport({

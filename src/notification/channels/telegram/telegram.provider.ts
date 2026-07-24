@@ -54,8 +54,29 @@ export class TelegramBotProvider implements NotificationProvider<TelegramSendInp
 
   private getBot(): any {
     if (!this.bot) {
-      const TelegramBot = getTelegramBot();
-      this.bot = new TelegramBot(this.config.token, { polling: false });
+      if (!isTelegramBotInstalled()) {
+        throw new Error(
+          '[TelegramBotProvider] "node-telegram-bot-api" is not installed. ' +
+            'Run: npm install node-telegram-bot-api',
+        );
+      }
+      const mod = getTelegramBot();
+      const TelegramBot =
+        typeof mod === 'function'
+          ? mod
+          : (mod as Record<string, unknown>).default;
+      if (typeof TelegramBot !== 'function') {
+        throw new Error(
+          '[TelegramBotProvider] Could not resolve TelegramBot constructor. ' +
+            'Ensure "node-telegram-bot-api" is installed correctly.',
+        );
+      }
+      this.bot = new (
+        TelegramBot as new (
+          token: string,
+          options?: Record<string, unknown>,
+        ) => Record<string, unknown>
+      )(this.config.token, { polling: false });
     }
     return this.bot;
   }

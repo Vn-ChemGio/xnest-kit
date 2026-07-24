@@ -14,6 +14,7 @@ const mockInitializeApp = jest.fn();
 
 beforeEach(() => {
   jest.resetAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetFirebaseAdmin.mockReturnValue({
     initializeApp: mockInitializeApp,
     messaging: jest.fn().mockReturnValue({

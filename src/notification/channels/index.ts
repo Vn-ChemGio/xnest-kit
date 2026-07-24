@@ -60,12 +60,8 @@ export type { WebPushProviderConfig } from './webpush';
 export { InAppSocketProvider, isSocketIoInstalled } from './inapp';
 
 // Discord
-export {
-  DiscordWebhookProvider,
-  DiscordBotProvider,
-  isDiscordJsInstalled,
-} from './discord';
-export type { DiscordBotProviderConfig } from './discord';
+export { DiscordProvider, isDiscordJsInstalled } from './discord';
+export type { DiscordProviderConfig } from './discord';
 
 // WeChat
 export { WeChatOfficialProvider } from './wechat';

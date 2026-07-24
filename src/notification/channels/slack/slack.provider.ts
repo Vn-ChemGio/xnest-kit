@@ -50,6 +50,12 @@ export class SlackProvider implements NotificationProvider<SlackSendInput> {
 
   private getClient(): any {
     if (!this.client) {
+      if (!isSlackWebApiInstalled()) {
+        throw new Error(
+          '[SlackProvider] "@slack/web-api" is not installed. ' +
+            'Run: npm install @slack/web-api',
+        );
+      }
       const SlackWebApi = getSlackWebApi();
       this.client = new SlackWebApi(this.config.token);
     }

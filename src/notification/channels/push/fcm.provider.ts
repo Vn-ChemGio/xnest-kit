@@ -52,6 +52,12 @@ export class FcmPushProvider implements NotificationProvider<PushSendInput> {
   private ensureInitialized(): void {
     if (this.initialized) return;
 
+    if (!isFirebaseAdminInstalled()) {
+      throw new Error(
+        '[FcmPushProvider] "firebase-admin" is not installed. ' +
+          'Run: npm install firebase-admin',
+      );
+    }
     const admin = getFirebaseAdmin();
     admin.initializeApp({
       credential: this.config.credential,

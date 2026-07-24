@@ -17,6 +17,7 @@ const MockServer = jest.fn().mockImplementation(() => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetSocketIo.mockReturnValue(MockServer);
   mockTo.mockReturnValue({ emit: mockEmit });
 });

@@ -14,6 +14,7 @@ const mockSendNotification = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetWebPush.mockReturnValue({
     setVapidDetails: mockSetVapidDetails,
     sendNotification: mockSendNotification,

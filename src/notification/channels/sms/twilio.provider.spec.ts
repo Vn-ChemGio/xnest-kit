@@ -12,6 +12,7 @@ const mockCreate = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetTwilio.mockReturnValue(
     jest.fn().mockReturnValue({ messages: { create: mockCreate } }),
   );

@@ -68,7 +68,7 @@ describe('NotificationModule', () => {
       );
 
       expect(optionsProvider).toBeDefined();
-      expect(optionsProvider?.useValue).toBe(defaultOptions);
+      expect(optionsProvider?.useValue).toEqual(defaultOptions);
     });
 
     it('should provide NotificationService', () => {
@@ -238,14 +238,14 @@ describe('NotificationModule', () => {
       expect(result.global).toBe(false);
     });
 
-    it('should provide factory-based options', () => {
+    it('should provide factory-based options', async () => {
       const result = NotificationModule.forRootAsync({
         useFactory: () => defaultOptions,
       });
 
       const providers = result.providers as Array<{
         provide: string;
-        useFactory: () => NotificationModuleOptions;
+        useFactory: () => Promise<NotificationModuleOptions>;
       }>;
 
       const optionsProvider = providers.find(
@@ -253,7 +253,8 @@ describe('NotificationModule', () => {
       );
 
       expect(optionsProvider).toBeDefined();
-      expect(optionsProvider?.useFactory()).toBe(defaultOptions);
+      const resolved = await optionsProvider.useFactory();
+      expect(resolved).toEqual(defaultOptions);
     });
 
     it('should provide NotificationService', () => {
@@ -271,7 +272,7 @@ describe('NotificationModule', () => {
       expect(result.exports).toContain(NotificationService);
     });
 
-    it('should register per-channel provider factory tokens', () => {
+    it('should resolve provider configs in async factory', async () => {
       const emailProvider = createMockProvider('sendgrid', 'email');
 
       const result = NotificationModule.forRootAsync({
@@ -282,17 +283,16 @@ describe('NotificationModule', () => {
 
       const providers = result.providers as Array<{
         provide: string;
-        useFactory: (opts: NotificationModuleOptions) => NotificationProvider;
+        useFactory: (...args: unknown[]) => Promise<NotificationModuleOptions>;
       }>;
 
-      const emailToken = providers.find(
-        (p) => p.provide === notificationProviderToken('email', 0),
+      const optionsProvider = providers.find(
+        (p) => p.provide === NOTIFICATION_MODULE_OPTIONS,
       );
 
-      expect(emailToken).toBeDefined();
-      expect(
-        emailToken?.useFactory({ providers: { email: [emailProvider] } }),
-      ).toBe(emailProvider);
+      expect(optionsProvider).toBeDefined();
+      const resolved = await optionsProvider.useFactory();
+      expect(resolved.providers.email).toContain(emailProvider);
     });
 
     it('should pass inject tokens to factory', () => {

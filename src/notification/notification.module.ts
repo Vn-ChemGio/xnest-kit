@@ -15,6 +15,21 @@ import type {
   NotificationModuleOptions,
   NotificationModuleAsyncOptions,
 } from './notification.type';
+import type { NotificationProvider } from './notification.constants';
+import { NodemailerEmailProvider } from './channels/email/nodemailer.provider';
+import { TwilioSmsProvider } from './channels/sms/twilio.provider';
+import { FcmPushProvider } from './channels/push/fcm.provider';
+import { TelegramBotProvider } from './channels/telegram/telegram.provider';
+import { SlackProvider } from './channels/slack/slack.provider';
+import { TeamsWebhookProvider } from './channels/teams/teams.provider';
+import { GoogleChatWebhookProvider } from './channels/googlechat/googlechat.provider';
+import { WhatsAppCloudProvider } from './channels/whatsapp/whatsapp.provider';
+import { ViberBotProvider } from './channels/viber/viber.provider';
+import { LineMessagingProvider } from './channels/line/line.provider';
+import { WebPushProvider } from './channels/webpush/webpush.provider';
+import { InAppSocketProvider } from './channels/inapp/inapp.provider';
+import { DiscordProvider } from './channels/discord/discord.provider';
+import { WeChatOfficialProvider } from './channels/wechat/wechat.provider';
 
 /** All supported channel names. */
 const CHANNELS = [
@@ -33,6 +48,64 @@ const CHANNELS = [
   'discord',
   'wechat',
 ] as const;
+
+/** Channel → default provider constructor mapping. */
+const CHANNEL_CONSTRUCTOR: Record<string, new (...args: any[]) => any> = {
+  email: NodemailerEmailProvider,
+  sms: TwilioSmsProvider,
+  push: FcmPushProvider,
+  telegram: TelegramBotProvider,
+  slack: SlackProvider,
+  teams: TeamsWebhookProvider,
+  googlechat: GoogleChatWebhookProvider,
+  whatsapp: WhatsAppCloudProvider,
+  viber: ViberBotProvider,
+  line: LineMessagingProvider,
+  webpush: WebPushProvider,
+  inapp: InAppSocketProvider,
+  discord: DiscordProvider,
+  wechat: WeChatOfficialProvider,
+};
+
+/**
+ * Check if a value is an already-instantiated provider (has a `send` method).
+ */
+function isProviderInstance(value: unknown): value is NotificationProvider {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    'send' in value &&
+    typeof (value as NotificationProvider).send === 'function'
+  );
+}
+
+/**
+ * Resolve a channel entry: if it's a config object, instantiate the
+ * corresponding provider. If it's already a provider instance, return as-is.
+ */
+function resolveProvider(
+  channel: string,
+  entry: unknown,
+): NotificationProvider {
+  if (isProviderInstance(entry)) return entry;
+
+  // Discord: config-based → DiscordProvider handles token internally
+  if (
+    channel === 'discord' &&
+    entry &&
+    typeof entry === 'object' &&
+    'token' in entry
+  ) {
+    return new DiscordProvider(
+      entry as import('./channels/discord/discord.provider').DiscordProviderConfig,
+    );
+  }
+
+  const Ctor = CHANNEL_CONSTRUCTOR[channel];
+  if (!Ctor) return entry as NotificationProvider;
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+  return new Ctor(entry);
+}
 
 /**
  * NestJS DynamicModule for multi-channel notifications.
@@ -92,16 +165,32 @@ export class NotificationModule {
    * @returns DynamicModule to import in your AppModule.
    */
   static forRoot(options: NotificationModuleOptions): DynamicModule {
+    // Resolve all channel entries (config → provider instance)
+    const resolvedProviders: Record<string, NotificationProvider[]> = {};
+    for (const channel of CHANNELS) {
+      const entries = (
+        options.providers as Record<string, unknown[] | undefined>
+      )[channel];
+      if (entries) {
+        resolvedProviders[channel] = entries.map((entry) =>
+          resolveProvider(channel, entry),
+        );
+      }
+    }
+
+    const resolvedOptions: NotificationModuleOptions = {
+      ...options,
+      providers: resolvedProviders,
+    };
+
     const providers: Provider[] = [
-      { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+      { provide: NOTIFICATION_MODULE_OPTIONS, useValue: resolvedOptions },
       NotificationService,
     ];
 
     // Register per-channel provider tokens for decorator injection
     for (const channel of CHANNELS) {
-      const channelProviders = (
-        options.providers as Record<string, unknown[] | undefined>
-      )[channel];
+      const channelProviders = resolvedProviders[channel];
       if (channelProviders) {
         channelProviders.forEach((provider, index) => {
           providers.push({
@@ -170,33 +259,36 @@ export class NotificationModule {
   static forRootAsync(options: NotificationModuleAsyncOptions): DynamicModule {
     const asyncOptionsProvider: Provider = {
       provide: NOTIFICATION_MODULE_OPTIONS,
-      useFactory: options.useFactory,
+      useFactory: async (...args: unknown[]) => {
+        const opts = await options.useFactory(...args);
+        // Resolve all channel entries (config → provider instance)
+        const resolvedProviders: Record<string, NotificationProvider[]> = {};
+        for (const channel of CHANNELS) {
+          const entries = (
+            opts.providers as Record<string, unknown[] | undefined>
+          )[channel];
+          if (entries) {
+            resolvedProviders[channel] = entries.map((entry) =>
+              resolveProvider(channel, entry),
+            );
+          }
+        }
+        return {
+          ...opts,
+          providers:
+            resolvedProviders as NotificationModuleOptions['providers'],
+        };
+      },
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       inject: (options.inject ?? []) as any[],
     };
-
-    // Register per-channel provider factory tokens (index 0 only)
-    const channelProviders: Provider[] = CHANNELS.map((channel) => ({
-      provide: notificationProviderToken(channel, 0),
-      useFactory: (opts: NotificationModuleOptions) => {
-        const providers = (
-          opts.providers as Record<string, unknown[] | undefined>
-        )[channel];
-        return providers?.[0];
-      },
-      inject: [NOTIFICATION_MODULE_OPTIONS],
-    }));
 
     return {
       module: NotificationModule,
       global: options.global ?? true,
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       imports: (options.imports ?? []) as any[],
-      providers: [
-        asyncOptionsProvider,
-        ...channelProviders,
-        NotificationService,
-      ],
+      providers: [asyncOptionsProvider, NotificationService],
       exports: [NotificationService],
     };
   }

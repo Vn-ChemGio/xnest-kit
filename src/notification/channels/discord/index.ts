@@ -1,7 +1,3 @@
 export type { DiscordSendInput } from './discord.channel';
-export {
-  DiscordWebhookProvider,
-  DiscordBotProvider,
-  isDiscordJsInstalled,
-} from './discord.provider';
-export type { DiscordBotProviderConfig } from './discord.provider';
+export { DiscordProvider, isDiscordJsInstalled } from './discord.provider';
+export type { DiscordProviderConfig } from './discord.provider';

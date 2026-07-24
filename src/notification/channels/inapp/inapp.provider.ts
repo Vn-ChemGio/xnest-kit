@@ -44,6 +44,12 @@ export class InAppSocketProvider implements NotificationProvider<InAppSendInput>
 
   private getServer(): any {
     if (!this.server) {
+      if (!isSocketIoInstalled()) {
+        throw new Error(
+          '[InAppSocketProvider] "socket.io" is not installed. ' +
+            'Run: npm install socket.io',
+        );
+      }
       const Server = getSocketIo();
       this.server = new Server(this.options.port, {
         cors: { origin: '*' },

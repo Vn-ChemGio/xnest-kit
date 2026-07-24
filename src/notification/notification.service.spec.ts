@@ -65,16 +65,14 @@ describe('NotificationService', () => {
     });
 
     describe('send', () => {
-      it('should return failure when no providers configured', async () => {
-        const result = await service.send('email', {
-          to: 'test@example.com',
-          subject: 'Test',
-          body: 'Hello',
-        });
-
-        expect(result.success).toBe(false);
-        expect(result.channels).toHaveLength(0);
-        expect(result.timestamp).toBeInstanceOf(Date);
+      it('should throw when no providers configured', async () => {
+        await expect(
+          service.send('email', {
+            to: 'test@example.com',
+            subject: 'Test',
+            body: 'Hello',
+          }),
+        ).rejects.toThrow('No providers configured for channel "email"');
       });
 
       it('should send through configured provider', async () => {
@@ -135,7 +133,7 @@ describe('NotificationService', () => {
         expect(result.channels[0].results[0].error).toBe('Send failed');
       });
 
-      it('should handle provider throwing error', async () => {
+      it('should throw when provider throws error', async () => {
         const provider: NotificationProvider = {
           name: 'throwing-provider',
           channel: 'email',
@@ -154,17 +152,16 @@ describe('NotificationService', () => {
         }).compile();
 
         const svc = module.get(NotificationService);
-        const result = await svc.send('email', {
-          to: 'test@example.com',
-          subject: 'Test',
-          body: 'Hello',
-        });
-
-        expect(result.success).toBe(false);
-        expect(result.channels[0].results[0].error).toBe('Network error');
+        await expect(
+          svc.send('email', {
+            to: 'test@example.com',
+            subject: 'Test',
+            body: 'Hello',
+          }),
+        ).rejects.toThrow('Network error');
       });
 
-      it('should handle provider throwing string error', async () => {
+      it('should throw when provider throws string error', async () => {
         const provider: NotificationProvider = {
           name: 'string-error-provider',
           channel: 'email',
@@ -183,17 +180,16 @@ describe('NotificationService', () => {
         }).compile();
 
         const svc = module.get(NotificationService);
-        const result = await svc.send('email', {
-          to: 'test@example.com',
-          subject: 'Test',
-          body: 'Hello',
-        });
-
-        expect(result.success).toBe(false);
-        expect(result.channels[0].results[0].error).toBe('String error');
+        await expect(
+          svc.send('email', {
+            to: 'test@example.com',
+            subject: 'Test',
+            body: 'Hello',
+          }),
+        ).rejects.toBe('String error');
       });
 
-      it('should handle provider throwing unknown error', async () => {
+      it('should throw when provider throws unknown error', async () => {
         const provider: NotificationProvider = {
           name: 'unknown-error-provider',
           channel: 'email',
@@ -212,14 +208,13 @@ describe('NotificationService', () => {
         }).compile();
 
         const svc = module.get(NotificationService);
-        const result = await svc.send('email', {
-          to: 'test@example.com',
-          subject: 'Test',
-          body: 'Hello',
-        });
-
-        expect(result.success).toBe(false);
-        expect(result.channels[0].results[0].error).toBe('Unknown error');
+        await expect(
+          svc.send('email', {
+            to: 'test@example.com',
+            subject: 'Test',
+            body: 'Hello',
+          }),
+        ).rejects.toBe(42);
       });
 
       it('should send partial success with multiple providers', async () => {
@@ -332,7 +327,7 @@ describe('NotificationService', () => {
         const input: SendInput = {
           sms: {
             to: '+1234567890',
-            message: 'Hello',
+            body: 'Hello',
           },
         };
 

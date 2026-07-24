@@ -52,6 +52,12 @@ export class TwilioSmsProvider implements NotificationProvider<SmsSendInput> {
   constructor(private readonly config: TwilioSmsProviderConfig) {}
 
   async send(input: SmsSendInput): Promise<ProviderResult> {
+    if (!isTwilioInstalled()) {
+      throw new Error(
+        '[TwilioSmsProvider] "twilio" is not installed. ' +
+          'Run: npm install twilio',
+      );
+    }
     const twilio = getTwilio();
 
     if (!this.client) {

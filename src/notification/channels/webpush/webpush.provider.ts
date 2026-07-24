@@ -51,6 +51,12 @@ export class WebPushProvider implements NotificationProvider<WebPushSendInput> {
   private ensureInitialized(): void {
     if (this.initialized) return;
 
+    if (!isWebPushInstalled()) {
+      throw new Error(
+        '[WebPushProvider] "web-push" is not installed. ' +
+          'Run: npm install web-push',
+      );
+    }
     const webPush = getWebPush();
     webPush.setVapidDetails(
       this.config.subject,

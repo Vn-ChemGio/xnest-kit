@@ -16,6 +16,7 @@ const MockSlackWebApi = jest.fn().mockImplementation(() => ({
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetSlackWebApi.mockReturnValue(MockSlackWebApi);
 });
 

@@ -13,6 +13,17 @@ import type { WebPushSendInput } from './channels/webpush/webpush.channel';
 import type { InAppSendInput } from './channels/inapp/inapp.channel';
 import type { DiscordSendInput } from './channels/discord/discord.channel';
 import type { WeChatSendInput } from './channels/wechat/wechat.channel';
+import type { NodemailerEmailProviderConfig } from './channels/email/nodemailer.provider';
+import type { TwilioSmsProviderConfig } from './channels/sms/twilio.provider';
+import type { FcmPushProviderConfig } from './channels/push/fcm.provider';
+import type { TelegramBotProviderConfig } from './channels/telegram/telegram.provider';
+import type { SlackProviderConfig } from './channels/slack/slack.provider';
+import type { WhatsAppCloudProviderConfig } from './channels/whatsapp/whatsapp.provider';
+import type { ViberBotProviderConfig } from './channels/viber/viber.provider';
+import type { LineMessagingProviderConfig } from './channels/line/line.provider';
+import type { WebPushProviderConfig } from './channels/webpush/webpush.provider';
+import type { DiscordProviderConfig } from './channels/discord/discord.provider';
+import type { WeChatOfficialProviderConfig } from './channels/wechat/wechat.provider';
 
 /** Supported notification channel types. */
 export type ChannelType =
@@ -124,20 +135,27 @@ export interface NotificationStore {
 /** Synchronous module configuration options. */
 export interface NotificationModuleOptions {
   providers: {
-    email?: NotificationProvider<EmailSendInput>[];
-    sms?: NotificationProvider<SmsSendInput>[];
-    push?: NotificationProvider<PushSendInput>[];
-    telegram?: NotificationProvider<TelegramSendInput>[];
-    slack?: NotificationProvider<SlackSendInput>[];
+    email?:
+      NotificationProvider<EmailSendInput>[] | NodemailerEmailProviderConfig[];
+    sms?: NotificationProvider<SmsSendInput>[] | TwilioSmsProviderConfig[];
+    push?: NotificationProvider<PushSendInput>[] | FcmPushProviderConfig[];
+    telegram?:
+      NotificationProvider<TelegramSendInput>[] | TelegramBotProviderConfig[];
+    slack?: NotificationProvider<SlackSendInput>[] | SlackProviderConfig[];
     teams?: NotificationProvider<TeamsSendInput>[];
     googlechat?: NotificationProvider<GoogleChatSendInput>[];
-    whatsapp?: NotificationProvider<WhatsAppSendInput>[];
-    viber?: NotificationProvider<ViberSendInput>[];
-    line?: NotificationProvider<LineSendInput>[];
-    webpush?: NotificationProvider<WebPushSendInput>[];
+    whatsapp?:
+      NotificationProvider<WhatsAppSendInput>[] | WhatsAppCloudProviderConfig[];
+    viber?: NotificationProvider<ViberSendInput>[] | ViberBotProviderConfig[];
+    line?:
+      NotificationProvider<LineSendInput>[] | LineMessagingProviderConfig[];
+    webpush?:
+      NotificationProvider<WebPushSendInput>[] | WebPushProviderConfig[];
     inapp?: NotificationProvider<InAppSendInput>[];
-    discord?: NotificationProvider<DiscordSendInput>[];
-    wechat?: NotificationProvider<WeChatSendInput>[];
+    discord?:
+      NotificationProvider<DiscordSendInput>[] | DiscordProviderConfig[];
+    wechat?:
+      NotificationProvider<WeChatSendInput>[] | WeChatOfficialProviderConfig[];
   };
   queue?: {
     enabled: boolean;

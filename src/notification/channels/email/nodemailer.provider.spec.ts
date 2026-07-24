@@ -17,6 +17,7 @@ const mockClose = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (isPackageInstalled as jest.Mock).mockReturnValue(true);
   mockGetNodemailer.mockReturnValue({
     createTransport: jest.fn().mockReturnValue({
       sendMail: mockSendMail,
