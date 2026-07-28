@@ -30,6 +30,35 @@ All notable changes to xnest-kit will be documented in this file.
 
 ---
 
+## [0.0.5] - 2026-07-28
+
+### Added
+
+- Notification module — `NotificationModule.forRoot()`, `NotificationModule.forRootAsync()`
+- 14 channel providers — `email`, `sms`, `push`, `telegram`, `slack`, `teams`, `googlechat`, `whatsapp`, `viber`, `line`, `webpush`, `inapp`, `discord`, `wechat`
+- `NotificationService.send()` with fully typed overloads per channel
+- `NotificationService.getDiagnostics()` — runtime provider/store/queue status
+- TypeORM persistence — `TypeOrmNotificationStore`, `NotificationLogEntity`
+- Optional queue adapter support
+- Injection decorators — `@InjectNotificationProvider`, `@InjectNotificationStore`, `@InjectNotificationQueue`, `@InjectNotificationOptions`
+- Shared injection tokens — `NOTIFICATION_MODULE_OPTIONS`, `NOTIFICATION_STORE`, `NOTIFICATION_QUEUE`, `notificationProviderToken()`
+- Config objects auto-resolved to provider instances via lazy imports
+- 740 tests across 33 test suites
+
+### Changed
+
+- Root README.md — notification status badge updated to `stable-brightgreen`, added usage examples
+- Docs sidebar — added `stable-brightgreen` badge to notification entry
+- `docs/examples.md` — added Notification section
+- `docs/api/notification.md` — full rewrite covering all 14 channels
+
+### Fixed
+
+- Import consolidation in `notification.service.ts`
+- TS2339/TS2345 errors in spec files
+
+---
+
 ## [0.0.4] - 2026-07-23
 
 ### Added

@@ -1,6 +1,6 @@
 {
   "name": "xnest-kit",
-  "version": "0.0.3",
+  "version": "0.0.5",
   "description": "A modular, production-ready NestJS toolkit — Bootstrap, Auth, SaaS, and Infra integrations in a single package.",
   "keywords": [
     "nestjs",

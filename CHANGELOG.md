@@ -33,6 +33,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [0.0.5] - 2026-07-28
+
+### Added
+
+- Notification module — `NotificationModule.forRoot()`, `NotificationModule.forRootAsync()`
+- 14 channel providers — `email`, `sms`, `push`, `telegram`, `slack`, `teams`, `googlechat`, `whatsapp`, `viber`, `line`, `webpush`, `inapp`, `discord`, `wechat`
+- `NotificationService.send()` with fully typed overloads per channel
+- `NotificationService.getDiagnostics()` — runtime provider/store/queue status
+- TypeORM persistence — `TypeOrmNotificationStore`, `NotificationLogEntity`, `notification_logs` table
+- Optional queue adapter support via `NotificationModuleOptions.queue`
+- Injection decorators — `@InjectNotificationProvider`, `@InjectNotificationStore`, `@InjectNotificationQueue`, `@InjectNotificationOptions`
+- Shared injection tokens — `NOTIFICATION_MODULE_OPTIONS`, `NOTIFICATION_STORE`, `NOTIFICATION_QUEUE`, `notificationProviderToken()`
+- Config objects auto-resolved to provider instances via lazy imports at startup
+- `shared/notification-keys.ts` — injection tokens + `notificationProviderToken()` helper
+- `notification/constants.ts` — `CHANNELS`, `ProviderResult`, `NotificationProvider<T>`
+- Full notification module documentation (`src/notification/README.md`)
+- 740 tests across 33 test suites
+
+### Changed
+
+- `notification.type.ts` barrel imports — consolidated 14 channel type imports into single path
+- `notification.type.ts` re-exports all 14 channel `SendInput` types for external consumers
+- Root README.md — notification status badge updated to `stable-brightgreen`, added usage examples, per-channel peer dependency install commands
+- Docs sidebar — added `stable-brightgreen` badge to notification entry
+- `docs/examples.md` — added Notification section (module setup, async config, sending, storage, custom provider)
+- `docs/api/notification.md` — full rewrite covering all 14 channels, config vs provider instances, storage, queue, decorators, injection tokens
+
+### Deprecated
+
+- N/A
+
+### Removed
+
+- N/A
+
+### Fixed
+
+- Import consolidation in `notification.service.ts` — 14 channel type imports → single barrel import
+- TS2339/TS2345 errors in `notification.module.spec.ts` — type casts for unknown channels
+- TS2339/TS2345 errors in `typeorm-notification.store.spec.ts` — `ChannelType`/`ChannelResult` casts
+
+### Security
+
+- N/A
+
+---
+
 ## [0.0.4] - 2026-07-23
 
 ### Added
@@ -172,7 +219,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Project scaffolding
 - Feature module stubs
 
-[Unreleased]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.4...HEAD
+[Unreleased]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.5...HEAD
+[0.0.5]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.4...v0.0.5
 [0.0.4]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.3...v0.0.4
 [0.0.3]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.2...v0.0.3
 [0.0.2]: https://github.com/Vn-ChemGio/xnest-kit/compare/v0.0.1-alpha.0...v0.0.2
