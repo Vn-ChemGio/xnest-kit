@@ -37,7 +37,7 @@
 | [typeorm](./src/typeorm) | TypeORM config, entity decorators, query builder, transactions | ![](https://img.shields.io/badge/stable-brightgreen) |
 | [queue](./src/queue) | BullMQ config & decorators | ![](https://img.shields.io/badge/alpha-orange) |
 | [validation](./src/validation) | Request validation with i18n | ![](https://img.shields.io/badge/alpha-orange) |
-| [notification](./src/notification) | Multi-adapter notifications | ![](https://img.shields.io/badge/alpha-orange) |
+| [notification](./src/notification) | Multi-channel notifications (14 channels) | ![](https://img.shields.io/badge/stable-brightgreen) |
 | [activity-feed](./src/activity-feed) | Activity tracking | ![](https://img.shields.io/badge/alpha-orange) |
 | [audit-log](./src/audit-log) | Audit logging | ![](https://img.shields.io/badge/alpha-orange) |
 | [logger](./src/logger) | Enhanced logging | ![](https://img.shields.io/badge/alpha-orange) |
@@ -169,6 +169,49 @@ const buffer = await generateExcel(data, {
 });
 ```
 
+### Notification
+
+```typescript
+import { Module } from '@nestjs/common';
+import { NotificationModule } from 'xnest-kit/notification';
+
+@Module({
+  imports: [
+    NotificationModule.forRoot({
+      providers: {
+        email: [{ host: 'smtp.example.com', port: 587 }],
+        telegram: [{ token: process.env.BOT_TOKEN! }],
+        discord: [{ token: process.env.DISCORD_TOKEN! }],
+      },
+      storage: { enabled: true, useClass: TypeOrmNotificationStore },
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+```typescript
+import { NotificationService } from 'xnest-kit/notification';
+
+@Injectable()
+export class OrderService {
+  constructor(private readonly notification: NotificationService) {}
+
+  async placeOrder(order: Order) {
+    await this.notification.send('email', {
+      to: order.email,
+      subject: 'Order confirmed',
+      body: '<h1>Thanks!</h1>',
+    });
+
+    await this.notification.send('telegram', {
+      chatId: order.telegramChatId,
+      text: `Order #${order.id} confirmed`,
+    });
+  }
+}
+```
+
 ## Requirements
 
 - Node.js >= 18
@@ -196,6 +239,16 @@ npm install @nestjs/cache-manager cache-manager keyv @keyv/valkey
 
 # TypeORM module
 npm install typeorm @nestjs/typeorm
+
+# Notification module (per-channel, install as needed)
+npm install nodemailer           # email
+npm install twilio               # sms
+npm install firebase-admin       # push
+npm install telegraf             # telegram
+npm install @slack/web-api       # slack
+npm install discord.js           # discord
+npm install web-push             # webpush
+npm install socket.io            # inapp
 ```
 
 ## Development

@@ -10,7 +10,7 @@
   - [typeorm](/api/typeorm.md) ![](https://img.shields.io/badge/stable-brightgreen)
   - [queue](/api/queue.md)
   - [validation](/api/validation.md)
-  - [notification](/api/notification.md)
+  - [notification](/api/notification.md) ![](https://img.shields.io/badge/stable-brightgreen)
   - [activity-feed](/api/activity-feed.md)
   - [audit-log](/api/audit-log.md)
   - [logger](/api/logger.md)

@@ -1,20 +1,10 @@
-# notification
+# xnest-kit/notification
 
-> Multi-channel notification module for NestJS — 14 channels, pluggable providers, optional persistence and queuing.
+Multi-channel notification module for NestJS — 14 channels, pluggable providers, optional persistence and queuing.
 
-## Status
+## Prerequisites
 
-![](https://img.shields.io/badge/stable-brightgreen)
-
-## Installation
-
-```bash
-npm install xnest-kit
-```
-
-## Peer Dependencies
-
-Core has no extra dependencies. Each channel requires its own SDK:
+Core module has no extra dependencies. Each channel requires its own SDK:
 
 | Channel | Package | Config Type |
 |---------|---------|-------------|
@@ -183,10 +173,17 @@ export class OrderService {
   constructor(private readonly notification: NotificationService) {}
 
   async placeOrder(order: Order) {
+    // TypeScript enforces EmailSendInput for 'email' channel
     await this.notification.send('email', {
       to: order.email,
       subject: 'Order confirmed',
       body: '<h1>Thanks!</h1>',
+    });
+
+    // TypeScript enforces TelegramSendInput for 'telegram' channel
+    await this.notification.send('telegram', {
+      chatId: order.telegramChatId,
+      text: 'Your order is confirmed!',
     });
   }
 }
@@ -194,7 +191,7 @@ export class OrderService {
 
 ### NotificationService.getDiagnostics
 
-Returns current initialization status:
+Returns current initialization status — useful for health-check endpoints:
 
 ```typescript
 getDiagnostics(): NotificationDiagnostics
@@ -215,7 +212,10 @@ getDiagnostics(): NotificationDiagnostics
 Enable persistence to save every `send()` result to a database:
 
 ```typescript
-import { NotificationModule, NotificationLogEntity } from 'xnest-kit/notification';
+import {
+  NotificationModule,
+  NotificationLogEntity,
+} from 'xnest-kit/notification';
 import { TypeOrmNotificationStore } from 'xnest-kit/notification/typeorm';
 
 @Module({
@@ -277,10 +277,12 @@ NotificationModule.forRoot({
   providers: { email: [{ host: 'smtp.example.com' }] },
   queue: {
     enabled: true,
-    inject: 'BULLMQ_QUEUE',
+    inject: 'BULLMQ_QUEUE', // your queue provider token
   },
 });
 ```
+
+When enabled, `send()` delegates to the queue instead of sending immediately.
 
 | Option | Type | Description |
 |--------|------|-------------|
@@ -393,7 +395,10 @@ Use `getDiagnostics()` to check status programmatically.
 Implement `NotificationProvider<T>`:
 
 ```typescript
-import type { NotificationProvider, ProviderResult } from 'xnest-kit/notification';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from 'xnest-kit/notification';
 import type { EmailSendInput } from 'xnest-kit/notification';
 
 export class CustomEmailProvider implements NotificationProvider<EmailSendInput> {
