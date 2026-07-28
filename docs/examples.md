@@ -95,3 +95,99 @@ export class User {
   email: string;
 }
 ```
+
+## Notification
+
+### Module setup
+
+```typescript
+import { Module } from '@nestjs/common';
+import { NotificationModule } from 'xnest-kit/notification';
+
+@Module({
+  imports: [
+    NotificationModule.forRoot({
+      providers: {
+        email: [{ host: 'smtp.example.com', port: 587 }],
+        telegram: [{ token: process.env.BOT_TOKEN! }],
+        discord: [{ token: process.env.DISCORD_TOKEN! }],
+      },
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Async configuration
+
+```typescript
+NotificationModule.forRootAsync({
+  useFactory: (config: ConfigService) => ({
+    providers: {
+      email: [{ host: config.get('SMTP_HOST') }],
+    },
+    storage: { enabled: true, useClass: TypeOrmNotificationStore },
+  }),
+  imports: [TypeOrmModule.forFeature([NotificationLogEntity])],
+  inject: [ConfigService],
+})
+```
+
+### Sending notifications
+
+```typescript
+import { NotificationService } from 'xnest-kit/notification';
+
+@Injectable()
+export class OrderService {
+  constructor(private readonly notification: NotificationService) {}
+
+  async placeOrder(order: Order) {
+    await this.notification.send('email', {
+      to: order.email,
+      subject: 'Order confirmed',
+      body: '<h1>Thanks!</h1>',
+    });
+
+    await this.notification.send('telegram', {
+      chatId: order.telegramChatId,
+      text: `Order #${order.id} confirmed`,
+    });
+  }
+}
+```
+
+### With storage
+
+```typescript
+import { NotificationModule, NotificationLogEntity } from 'xnest-kit/notification';
+import { TypeOrmNotificationStore } from 'xnest-kit/notification/typeorm';
+
+@Module({
+  imports: [
+    TypeOrmModule.forRoot({ entities: [NotificationLogEntity] }),
+    NotificationModule.forRoot({
+      providers: { email: [{ host: 'smtp.example.com' }] },
+      storage: { enabled: true, useClass: TypeOrmNotificationStore },
+    }),
+  ],
+})
+export class AppModule {}
+```
+
+### Custom provider
+
+```typescript
+import type { NotificationProvider, ProviderResult } from 'xnest-kit/notification';
+import type { EmailSendInput } from 'xnest-kit/notification';
+
+export class CustomEmailProvider implements NotificationProvider<EmailSendInput> {
+  readonly name = 'custom-email';
+  readonly channel = 'email';
+
+  async send(input: EmailSendInput): Promise<ProviderResult> {
+    // your implementation
+    return { success: true, providerName: this.name, channel: this.channel };
+  }
+}
+```
