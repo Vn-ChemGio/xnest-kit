@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Discord provider.
  *
@@ -12,11 +11,27 @@
  */
 
 import { isPackageInstalled, lazyImport } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { DiscordSendInput } from './discord.channel';
 
-const getDiscordJs = lazyImport<any>('discord.js', 'DiscordProvider');
+const getDiscordJs = lazyImport<{
+  Client: new (options: { intents: number[] }) => {
+    channels: {
+      cache: {
+        get: (
+          id: string,
+        ) =>
+          | { send: (options: Record<string, unknown>) => Promise<unknown> }
+          | undefined;
+      };
+    };
+    login: (token?: string) => Promise<string>;
+  };
+  GatewayIntentBits: { Guilds: number };
+}>('discord.js', 'DiscordProvider');
 
 /**
  * Configuration for the Discord provider.
@@ -57,7 +72,18 @@ export class DiscordProvider implements NotificationProvider<DiscordSendInput> {
   readonly name = 'discord';
   readonly channel = 'discord';
 
-  private client: any = null;
+  private client: {
+    channels: {
+      cache: {
+        get: (
+          id: string,
+        ) =>
+          | { send: (options: Record<string, unknown>) => Promise<unknown> }
+          | undefined;
+      };
+    };
+    login: (token?: string) => Promise<string>;
+  } | null = null;
 
   constructor(private readonly config: DiscordProviderConfig = {}) {}
 
@@ -181,7 +207,18 @@ export class DiscordProvider implements NotificationProvider<DiscordSendInput> {
     }
   }
 
-  private async getClient(): Promise<any> {
+  private async getClient(): Promise<{
+    channels: {
+      cache: {
+        get: (
+          id: string,
+        ) =>
+          | { send: (options: Record<string, unknown>) => Promise<unknown> }
+          | undefined;
+      };
+    };
+    login: (token?: string) => Promise<string>;
+  }> {
     if (this.client) return this.client;
 
     if (!isDiscordJsInstalled()) {

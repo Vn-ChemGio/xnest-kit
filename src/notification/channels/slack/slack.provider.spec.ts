@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 const mockGetSlackWebApi = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -112,7 +111,9 @@ describe('SlackProvider', () => {
 
     expect(mockPostMessage).toHaveBeenCalledWith(
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         blocks: expect.any(Array),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         attachments: expect.any(Array),
         thread_ts: '1234.5678',
       }),

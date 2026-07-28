@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   CallHandler,
 } from '@nestjs/common';
-import { Observable } from 'rxjs';
+import { Observable, firstValueFrom } from 'rxjs';
 import { DataSource } from 'typeorm';
 
 /**
@@ -35,8 +35,7 @@ export class TransactionInterceptor implements NestInterceptor {
     await queryRunner.startTransaction();
 
     try {
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      const result = await next.handle().toPromise();
+      const result: unknown = await firstValueFrom(next.handle());
       await queryRunner.commitTransaction();
       return new Observable((subscriber) => {
         subscriber.next(result);

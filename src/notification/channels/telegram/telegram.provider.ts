@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Telegram Bot API provider.
  *
@@ -8,16 +7,56 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { TelegramSendInput } from './telegram.channel';
 
 /** Lazy-loaded node-telegram-bot-api reference. */
 const getTelegramBot = lazyImport<
-  new (
-    token: string,
-    options?: Record<string, unknown>,
-  ) => Record<string, unknown>
+  | (new (
+      token: string,
+      options?: Record<string, unknown>,
+    ) => {
+      sendPhoto: (
+        chatId: string | number,
+        photo: string,
+        options?: Record<string, unknown>,
+      ) => Promise<{ message_id: number }>;
+      sendDocument: (
+        chatId: string | number,
+        document: string,
+        options?: Record<string, unknown>,
+      ) => Promise<{ message_id: number }>;
+      sendMessage: (
+        chatId: string | number,
+        text: string,
+        options?: Record<string, unknown>,
+      ) => Promise<{ message_id: number }>;
+    })
+  | {
+      default: new (
+        token: string,
+        options?: Record<string, unknown>,
+      ) => {
+        sendPhoto: (
+          chatId: string | number,
+          photo: string,
+          options?: Record<string, unknown>,
+        ) => Promise<{ message_id: number }>;
+        sendDocument: (
+          chatId: string | number,
+          document: string,
+          options?: Record<string, unknown>,
+        ) => Promise<{ message_id: number }>;
+        sendMessage: (
+          chatId: string | number,
+          text: string,
+          options?: Record<string, unknown>,
+        ) => Promise<{ message_id: number }>;
+      };
+    }
 >('node-telegram-bot-api', 'TelegramBotProvider');
 
 /**
@@ -48,11 +87,43 @@ export class TelegramBotProvider implements NotificationProvider<TelegramSendInp
   readonly name = 'telegram-bot';
   readonly channel = 'telegram';
 
-  private bot: any = null;
+  private bot: {
+    sendPhoto: (
+      chatId: string | number,
+      photo: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+    sendDocument: (
+      chatId: string | number,
+      document: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+    sendMessage: (
+      chatId: string | number,
+      text: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+  } | null = null;
 
   constructor(private readonly config: TelegramBotProviderConfig) {}
 
-  private getBot(): any {
+  private getBot(): {
+    sendPhoto: (
+      chatId: string | number,
+      photo: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+    sendDocument: (
+      chatId: string | number,
+      document: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+    sendMessage: (
+      chatId: string | number,
+      text: string,
+      options?: Record<string, unknown>,
+    ) => Promise<{ message_id: number }>;
+  } {
     if (!this.bot) {
       if (!isTelegramBotInstalled()) {
         throw new Error(
@@ -64,19 +135,16 @@ export class TelegramBotProvider implements NotificationProvider<TelegramSendInp
       const TelegramBot =
         typeof mod === 'function'
           ? mod
-          : (mod as Record<string, unknown>).default;
-      if (typeof TelegramBot !== 'function') {
+          : 'default' in mod
+            ? mod.default
+            : undefined;
+      if (!TelegramBot) {
         throw new Error(
           '[TelegramBotProvider] Could not resolve TelegramBot constructor. ' +
             'Ensure "node-telegram-bot-api" is installed correctly.',
         );
       }
-      this.bot = new (
-        TelegramBot as new (
-          token: string,
-          options?: Record<string, unknown>,
-        ) => Record<string, unknown>
-      )(this.config.token, { polling: false });
+      this.bot = new TelegramBot(this.config.token, { polling: false });
     }
     return this.bot;
   }

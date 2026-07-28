@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * In-App notification provider via Socket.IO.
  *
@@ -8,8 +7,10 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { InAppSendInput } from './inapp.channel';
 
 /** Lazy-loaded socket.io reference. */
@@ -17,7 +18,9 @@ const getSocketIo = lazyImport<{
   new (
     port?: number,
     options?: Record<string, unknown>,
-  ): Record<string, unknown>;
+  ): {
+    to: (room: string) => { emit: (event: string, data: unknown) => void };
+  };
 }>('socket.io', 'InAppSocketProvider');
 
 /**
@@ -36,13 +39,17 @@ export class InAppSocketProvider implements NotificationProvider<InAppSendInput>
   readonly name = 'socket-io';
   readonly channel = 'inapp';
 
-  private server: any = null;
+  private server: {
+    to: (room: string) => { emit: (event: string, data: unknown) => void };
+  } | null = null;
 
   constructor(
     private readonly options: { port?: number } & Record<string, unknown> = {},
   ) {}
 
-  private getServer(): any {
+  private getServer(): {
+    to: (room: string) => { emit: (event: string, data: unknown) => void };
+  } {
     if (!this.server) {
       if (!isSocketIoInstalled()) {
         throw new Error(
@@ -103,7 +110,9 @@ export class InAppSocketProvider implements NotificationProvider<InAppSendInput>
    * @returns The Socket.IO server
    */
 
-  getIOServer(): any {
+  getIOServer(): {
+    to: (room: string) => { emit: (event: string, data: unknown) => void };
+  } {
     return this.getServer();
   }
 }

@@ -1,6 +1,7 @@
 import {
   type DynamicModule,
   type Provider,
+  type Type,
   Module,
   Global,
 } from '@nestjs/common';
@@ -14,62 +15,10 @@ import { NotificationService } from './notification.service';
 import type {
   NotificationModuleOptions,
   NotificationModuleAsyncOptions,
+  NotificationStore,
 } from './notification.type';
-import type { NotificationProvider } from './notification.constants';
-import { NodemailerEmailProvider } from './channels/email/nodemailer.provider';
-import { TwilioSmsProvider } from './channels/sms/twilio.provider';
-import { FcmPushProvider } from './channels/push/fcm.provider';
-import { TelegramBotProvider } from './channels/telegram/telegram.provider';
-import { SlackProvider } from './channels/slack/slack.provider';
-import { TeamsWebhookProvider } from './channels/teams/teams.provider';
-import { GoogleChatWebhookProvider } from './channels/googlechat/googlechat.provider';
-import { WhatsAppCloudProvider } from './channels/whatsapp/whatsapp.provider';
-import { ViberBotProvider } from './channels/viber/viber.provider';
-import { LineMessagingProvider } from './channels/line/line.provider';
-import { WebPushProvider } from './channels/webpush/webpush.provider';
-import { InAppSocketProvider } from './channels/inapp/inapp.provider';
-import { DiscordProvider } from './channels/discord/discord.provider';
-import { WeChatOfficialProvider } from './channels/wechat/wechat.provider';
+import { CHANNELS, type NotificationProvider } from './notification.constants';
 
-/** All supported channel names. */
-const CHANNELS = [
-  'email',
-  'sms',
-  'push',
-  'telegram',
-  'slack',
-  'teams',
-  'googlechat',
-  'whatsapp',
-  'viber',
-  'line',
-  'webpush',
-  'inapp',
-  'discord',
-  'wechat',
-] as const;
-
-/** Channel → default provider constructor mapping. */
-const CHANNEL_CONSTRUCTOR: Record<string, new (...args: any[]) => any> = {
-  email: NodemailerEmailProvider,
-  sms: TwilioSmsProvider,
-  push: FcmPushProvider,
-  telegram: TelegramBotProvider,
-  slack: SlackProvider,
-  teams: TeamsWebhookProvider,
-  googlechat: GoogleChatWebhookProvider,
-  whatsapp: WhatsAppCloudProvider,
-  viber: ViberBotProvider,
-  line: LineMessagingProvider,
-  webpush: WebPushProvider,
-  inapp: InAppSocketProvider,
-  discord: DiscordProvider,
-  wechat: WeChatOfficialProvider,
-};
-
-/**
- * Check if a value is an already-instantiated provider (has a `send` method).
- */
 function isProviderInstance(value: unknown): value is NotificationProvider {
   return (
     typeof value === 'object' &&
@@ -80,31 +29,127 @@ function isProviderInstance(value: unknown): value is NotificationProvider {
 }
 
 /**
- * Resolve a channel entry: if it's a config object, instantiate the
- * corresponding provider. If it's already a provider instance, return as-is.
+ * Resolve a channel entry: if it's a config object, dynamically import
+ * and instantiate the corresponding provider. If it's already a provider
+ * instance, return as-is.
  */
-function resolveProvider(
+async function resolveProvider(
   channel: string,
   entry: unknown,
-): NotificationProvider {
+): Promise<NotificationProvider> {
   if (isProviderInstance(entry)) return entry;
 
-  // Discord: config-based → DiscordProvider handles token internally
-  if (
-    channel === 'discord' &&
-    entry &&
-    typeof entry === 'object' &&
-    'token' in entry
-  ) {
-    return new DiscordProvider(
-      entry as import('./channels/discord/discord.provider').DiscordProviderConfig,
-    );
-  }
-
-  const Ctor = CHANNEL_CONSTRUCTOR[channel];
+  const Ctor = await getChannelConstructor(channel);
   if (!Ctor) return entry as NotificationProvider;
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-  return new Ctor(entry);
+  return new Ctor(entry) as NotificationProvider;
+}
+
+async function getChannelConstructor(
+  channel: string,
+): Promise<new (...args: any[]) => any> {
+  const map: Record<string, () => Promise<{ new (...args: any[]): any }>> = {
+    email: () =>
+      import('./channels/email/nodemailer.provider').then(
+        (m) => m.NodemailerEmailProvider,
+      ),
+    sms: () =>
+      import('./channels/sms/twilio.provider').then((m) => m.TwilioSmsProvider),
+    push: () =>
+      import('./channels/push/fcm.provider').then((m) => m.FcmPushProvider),
+    telegram: () =>
+      import('./channels/telegram/telegram.provider').then(
+        (m) => m.TelegramBotProvider,
+      ),
+    slack: () =>
+      import('./channels/slack/slack.provider').then((m) => m.SlackProvider),
+    teams: () =>
+      import('./channels/teams/teams.provider').then(
+        (m) => m.TeamsWebhookProvider,
+      ),
+    googlechat: () =>
+      import('./channels/googlechat/googlechat.provider').then(
+        (m) => m.GoogleChatWebhookProvider,
+      ),
+    whatsapp: () =>
+      import('./channels/whatsapp/whatsapp.provider').then(
+        (m) => m.WhatsAppCloudProvider,
+      ),
+    viber: () =>
+      import('./channels/viber/viber.provider').then((m) => m.ViberBotProvider),
+    line: () =>
+      import('./channels/line/line.provider').then(
+        (m) => m.LineMessagingProvider,
+      ),
+    webpush: () =>
+      import('./channels/webpush/webpush.provider').then(
+        (m) => m.WebPushProvider,
+      ),
+    inapp: () =>
+      import('./channels/inapp/inapp.provider').then(
+        (m) => m.InAppSocketProvider,
+      ),
+    discord: () =>
+      import('./channels/discord/discord.provider').then(
+        (m) => m.DiscordProvider,
+      ),
+    wechat: () =>
+      import('./channels/wechat/wechat.provider').then(
+        (m) => m.WeChatOfficialProvider,
+      ),
+  };
+  return map[channel]?.();
+}
+
+async function resolveAllProviders(
+  rawProviders: Record<string, unknown[] | undefined>,
+): Promise<Record<string, NotificationProvider[]>> {
+  const resolved: Record<string, NotificationProvider[]> = {};
+
+  await Promise.all(
+    Object.entries(rawProviders).map(async ([channel, list]) => {
+      if (list) {
+        resolved[channel] = await Promise.all(
+          list.map((entry) => resolveProvider(channel, entry)),
+        );
+      }
+    }),
+  );
+
+  return resolved;
+}
+
+function buildStorageProviders(
+  storage?: NotificationModuleOptions['storage'],
+): Provider[] {
+  if (!storage?.enabled) return [];
+  if (storage.useClass)
+    return [{ provide: NOTIFICATION_STORE, useClass: storage.useClass }];
+  if (storage.inject)
+    return [
+      {
+        provide: NOTIFICATION_STORE,
+        useFactory: (s: NotificationStore): NotificationStore => s,
+        inject: [storage.inject as string | symbol],
+      },
+    ];
+  return [];
+}
+
+function buildQueueProviders(
+  queue?: NotificationModuleOptions['queue'],
+): Provider[] {
+  if (!queue?.enabled) return [];
+  if (queue.useClass)
+    return [{ provide: NOTIFICATION_QUEUE, useClass: queue.useClass }];
+  if (queue.inject)
+    return [
+      {
+        provide: NOTIFICATION_QUEUE,
+        useFactory: (q: unknown): unknown => q,
+        inject: [queue.inject as string | symbol],
+      },
+    ];
+  return [];
 }
 
 /**
@@ -113,20 +158,13 @@ function resolveProvider(
  * Supports 14 channels with pluggable providers, optional queuing,
  * and persistence.
  *
- * **Queue & Storage**: When enabled, provide the implementations as
- * providers in your module using the same injection token strings
- * passed in `queue.inject` / `storage.inject`.
- *
  * @example
  * ```typescript
- * import { Module } from '@nestjs/common';
- * import { NotificationModule } from 'xnest-kit/notification';
- *
  * @Module({
  *   imports: [
  *     NotificationModule.forRoot({
  *       providers: {
- *         email: [new SmtpEmailProvider({ host: 'smtp.example.com' })],
+ *         email: [{ host: 'smtp.example.com', port: 587 }],
  *       },
  *     }),
  *   ],
@@ -140,16 +178,10 @@ function resolveProvider(
  * @Module({
  *   imports: [
  *     NotificationModule.forRoot({
- *       providers: { email: [...] },
- *       storage: { enabled: true, inject: 'NOTIFICATION_TYPEORM_STORE' },
+ *       providers: { email: [{ host: 'smtp.example.com' }] },
+ *       storage: { enabled: true, useClass: TypeOrmNotificationStore },
+ *       imports: [TypeOrmModule.forFeature([NotificationLogEntity])],
  *     }),
- *     TypeOrmModule.forFeature([NotificationLogEntity]),
- *   ],
- *   providers: [
- *     {
- *       provide: 'NOTIFICATION_TYPEORM_STORE',
- *       useClass: TypeOrmNotificationStore,
- *     },
  *   ],
  * })
  * export class AppModule {}
@@ -165,59 +197,44 @@ export class NotificationModule {
    * @returns DynamicModule to import in your AppModule.
    */
   static forRoot(options: NotificationModuleOptions): DynamicModule {
-    // Resolve all channel entries (config → provider instance)
-    const resolvedProviders: Record<string, NotificationProvider[]> = {};
+    const optionsProvider: Provider = {
+      provide: NOTIFICATION_MODULE_OPTIONS,
+      useFactory: async (): Promise<NotificationModuleOptions> => {
+        const resolvedProviders = await resolveAllProviders(options.providers);
+        return {
+          ...options,
+          providers: resolvedProviders,
+        };
+      },
+    };
+
+    const providers: Provider[] = [
+      optionsProvider,
+      NotificationService,
+      ...buildStorageProviders(options.storage),
+      ...buildQueueProviders(options.queue),
+    ];
+
+    // Per-channel provider tokens for @InjectNotificationProvider decorator
     for (const channel of CHANNELS) {
       const entries = (
         options.providers as Record<string, unknown[] | undefined>
       )[channel];
       if (entries) {
-        resolvedProviders[channel] = entries.map((entry) =>
-          resolveProvider(channel, entry),
-        );
-      }
-    }
-
-    const resolvedOptions: NotificationModuleOptions = {
-      ...options,
-      providers: resolvedProviders,
-    };
-
-    const providers: Provider[] = [
-      { provide: NOTIFICATION_MODULE_OPTIONS, useValue: resolvedOptions },
-      NotificationService,
-    ];
-
-    // Register per-channel provider tokens for decorator injection
-    for (const channel of CHANNELS) {
-      const channelProviders = resolvedProviders[channel];
-      if (channelProviders) {
-        channelProviders.forEach((provider, index) => {
+        entries.forEach((_entry, index) => {
           providers.push({
             provide: notificationProviderToken(channel, index),
-            useValue: provider,
+            useFactory: async (): Promise<NotificationProvider> =>
+              resolveProvider(channel, entries[index]),
           });
         });
       }
     }
 
-    if (options.storage?.enabled && options.storage.inject) {
-      providers.push({
-        provide: NOTIFICATION_STORE,
-        useExisting: options.storage.inject,
-      });
-    }
-
-    if (options.queue?.enabled && options.queue.inject) {
-      providers.push({
-        provide: NOTIFICATION_QUEUE,
-        useExisting: options.queue.inject,
-      });
-    }
-
     return {
       module: NotificationModule,
       global: options.global ?? true,
+      imports: (options.imports ?? []) as (Type<unknown> | DynamicModule)[],
       providers,
       exports: [NotificationService],
     };
@@ -226,69 +243,37 @@ export class NotificationModule {
   /**
    * Configure the notification module asynchronously.
    *
-   * The factory returns `NotificationModuleOptions`. When enabling
-   * storage or queue, register the implementation providers in your
-   * module using the same token strings from the options.
-   *
-   * @example
-   * ```typescript
-   * @Module({
-   *   imports: [
-   *     NotificationModule.forRootAsync({
-   *       useFactory: (config: ConfigService) => ({
-   *         providers: { email: [...] },
-   *         storage: { enabled: true, inject: 'NOTIFICATION_TYPEORM_STORE' },
-   *       }),
-   *       inject: [ConfigService],
-   *     }),
-   *     TypeOrmModule.forFeature([NotificationLogEntity]),
-   *   ],
-   *   providers: [
-   *     {
-   *       provide: 'NOTIFICATION_TYPEORM_STORE',
-   *       useClass: TypeOrmNotificationStore,
-   *     },
-   *   ],
-   * })
-   * export class AppModule {}
-   * ```
-   *
    * @param options - Async module configuration.
    * @returns DynamicModule to import in your AppModule.
    */
   static forRootAsync(options: NotificationModuleAsyncOptions): DynamicModule {
     const asyncOptionsProvider: Provider = {
       provide: NOTIFICATION_MODULE_OPTIONS,
-      useFactory: async (...args: unknown[]) => {
+      useFactory: async (
+        ...args: unknown[]
+      ): Promise<NotificationModuleOptions> => {
         const opts = await options.useFactory(...args);
-        // Resolve all channel entries (config → provider instance)
-        const resolvedProviders: Record<string, NotificationProvider[]> = {};
-        for (const channel of CHANNELS) {
-          const entries = (
-            opts.providers as Record<string, unknown[] | undefined>
-          )[channel];
-          if (entries) {
-            resolvedProviders[channel] = entries.map((entry) =>
-              resolveProvider(channel, entry),
-            );
-          }
-        }
+        const resolvedProviders = await resolveAllProviders(opts.providers);
         return {
           ...opts,
-          providers:
-            resolvedProviders as NotificationModuleOptions['providers'],
+          storage: opts.storage ?? options.storage,
+          queue: opts.queue ?? options.queue,
+          providers: resolvedProviders,
         };
       },
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      inject: (options.inject ?? []) as any[],
+      inject: (options.inject ?? []) as (string | symbol)[],
     };
 
     return {
       module: NotificationModule,
       global: options.global ?? true,
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-      imports: (options.imports ?? []) as any[],
-      providers: [asyncOptionsProvider, NotificationService],
+      imports: (options.imports ?? []) as (Type<unknown> | DynamicModule)[],
+      providers: [
+        asyncOptionsProvider,
+        NotificationService,
+        ...buildStorageProviders(options.storage),
+        ...buildQueueProviders(options.queue),
+      ],
       exports: [NotificationService],
     };
   }

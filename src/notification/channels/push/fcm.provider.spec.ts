@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 const mockGetFirebaseAdmin = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -116,6 +115,7 @@ describe('FcmPushProvider', () => {
       data: { key: 'value' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const message = mockSendEachForMulticast.mock.calls[0][0] as Record<
       string,
       unknown

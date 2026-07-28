@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 const mockGetTelegramBot = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -92,6 +91,7 @@ describe('TelegramBotProvider', () => {
       buttons: [[{ text: 'Click me', url: 'https://example.com' }]],
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const options = mockSendMessage.mock.calls[0][2] as Record<string, unknown>;
     expect(options.reply_markup).toBeDefined();
   });
@@ -148,6 +148,7 @@ describe('TelegramBotProvider', () => {
       parseMode: 'MarkdownV2',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const options = mockSendMessage.mock.calls[0][2] as Record<string, unknown>;
     expect(options.parse_mode).toBe('MarkdownV2');
   });
@@ -165,6 +166,7 @@ describe('TelegramBotProvider', () => {
       buttons: [[{ text: 'Btn', callbackData: 'cb-123' }]],
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const options = mockSendMessage.mock.calls[0][2] as Record<string, unknown>;
     const markup = JSON.parse(options.reply_markup as string) as Record<
       string,

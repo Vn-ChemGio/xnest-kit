@@ -6,8 +6,10 @@
  * @module
  */
 
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { TeamsSendInput } from './teams.channel';
 
 /**

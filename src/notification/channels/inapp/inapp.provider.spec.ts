@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/only-throw-error */
 const mockGetSocketIo = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -78,6 +77,7 @@ describe('InAppSocketProvider', () => {
       metadata: { severity: 'high' },
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const notification = mockEmit.mock.calls[0][1] as Record<string, unknown>;
     expect(notification.type).toBe('warning');
     expect(notification.actionUrl).toBe('/alerts/123');
@@ -119,6 +119,7 @@ describe('InAppSocketProvider', () => {
       expiresAt: new Date('2025-12-31').toISOString(),
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const notification = mockEmit.mock.calls[0][1] as Record<string, unknown>;
     expect(notification.icon).toBe('https://example.com/icon.png');
     expect(notification.expiresAt).toBe(new Date('2025-12-31').toISOString());
@@ -133,12 +134,14 @@ describe('InAppSocketProvider', () => {
       body: 'Type test',
     });
 
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
     const notification = mockEmit.mock.calls[0][1] as Record<string, unknown>;
     expect(notification.type).toBe('info');
   });
 
   it('should handle non-Error throw', async () => {
     mockTo.mockImplementation(() => {
+      // eslint-disable-next-line @typescript-eslint/only-throw-error
       throw 'string error';
     });
 

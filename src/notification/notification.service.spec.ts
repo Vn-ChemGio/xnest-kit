@@ -1,4 +1,5 @@
 import { Test, type TestingModule } from '@nestjs/testing';
+import { ModuleRef } from '@nestjs/core';
 import { NotificationService } from './notification.service';
 import {
   NOTIFICATION_MODULE_OPTIONS,
@@ -6,6 +7,7 @@ import {
   NOTIFICATION_QUEUE,
 } from '../shared/notification-keys';
 import type {
+  NotificationDiagnostics,
   NotificationModuleOptions,
   NotificationStore,
   SendInput,
@@ -447,6 +449,43 @@ describe('NotificationService', () => {
       expect(result.id).toBe('test-id-123');
     });
 
+    it('should persist to store even when provider throws', async () => {
+      const failProvider = createMockProvider('fail-email', 'email');
+      (failProvider.send as jest.Mock).mockRejectedValue(
+        new Error('SMTP connection refused'),
+      );
+      const options: NotificationModuleOptions = {
+        providers: { email: [failProvider] },
+        storage: { enabled: true, inject: 'MOCK_STORE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: NOTIFICATION_STORE, useValue: mockStore },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+
+      await expect(
+        svc.send('email', {
+          to: 'test@example.com',
+          subject: 'Test',
+          body: 'Hello',
+        }),
+      ).rejects.toThrow('SMTP connection refused');
+
+      // eslint-disable-next-line @typescript-eslint/unbound-method
+      expect(mockStore.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          status: 'failed',
+          channels: ['email'],
+        }),
+      );
+    });
+
     it('should not persist when storage disabled', async () => {
       const provider = createMockProvider('test-email', 'email');
       const options: NotificationModuleOptions = {
@@ -678,6 +717,421 @@ describe('NotificationService', () => {
         expect(result).toHaveLength(1);
         expect(result[0].channel).toBe(channel);
       });
+    });
+  });
+
+  describe('onModuleInit', () => {
+    it('should warn when storage enabled but store not injected', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, inject: 'NOTIFICATION_TYPEORM_STORE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const spy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'storage is enabled but the store provider was not resolved',
+        ),
+      );
+    });
+
+    it('should warn when queue enabled but queue not injected', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {},
+        queue: { enabled: true, inject: 'NOTIFICATION_QUEUE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const spy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(spy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'queue is enabled but the queue provider was not resolved',
+        ),
+      );
+    });
+
+    it('should not warn when store is properly injected', async () => {
+      const mockStore = createMockStore();
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, inject: 'NOTIFICATION_TYPEORM_STORE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: NOTIFICATION_STORE, useValue: mockStore },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const spy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('should not warn when storage disabled', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: false },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const spy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('should dynamically create store from useClass when not injected', async () => {
+      const mockStore = createMockStore();
+      const MockStoreClass = jest.fn().mockImplementation(() => mockStore);
+      const mockModuleRef = { create: jest.fn().mockResolvedValue(mockStore) };
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: ModuleRef, useValue: mockModuleRef },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      await svc.onModuleInit();
+
+      expect(mockModuleRef.create).toHaveBeenCalledWith(MockStoreClass);
+      expect(svc['store']).toBe(mockStore);
+    });
+
+    it('should log success when store created via useClass', async () => {
+      const mockStore = createMockStore();
+      const MockStoreClass = jest.fn().mockImplementation(() => mockStore);
+      const mockModuleRef = { create: jest.fn().mockResolvedValue(mockStore) };
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: ModuleRef, useValue: mockModuleRef },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const logSpy = jest.spyOn(svc['logger'], 'log');
+
+      await svc.onModuleInit();
+
+      expect(logSpy).toHaveBeenCalledWith(
+        'Notification store initialized via useClass',
+      );
+    });
+
+    it('should log error when useClass instantiation fails', async () => {
+      const mockModuleRef = {
+        create: jest
+          .fn()
+          .mockRejectedValue(new Error('Cannot resolve dependencies')),
+      };
+      const MockStoreClass = jest.fn();
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: ModuleRef, useValue: mockModuleRef },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const errorSpy = jest.spyOn(svc['logger'], 'error');
+      const warnSpy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to initialize notification store'),
+      );
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'storage is enabled but the store provider was not resolved',
+        ),
+      );
+    });
+
+    it('should skip useClass when store already injected', async () => {
+      const mockStore = createMockStore();
+      const MockStoreClass = jest.fn();
+      const mockModuleRef = { create: jest.fn() };
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: NOTIFICATION_STORE, useValue: mockStore },
+          { provide: ModuleRef, useValue: mockModuleRef },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      await svc.onModuleInit();
+
+      expect(mockModuleRef.create).not.toHaveBeenCalled();
+    });
+
+    it('should skip useClass when moduleRef is not injected', async () => {
+      const MockStoreClass = jest.fn();
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: ModuleRef, useValue: undefined },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const warnSpy = jest.spyOn(svc['logger'], 'warn');
+
+      await svc.onModuleInit();
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining(
+          'storage is enabled but the store provider was not resolved',
+        ),
+      );
+    });
+  });
+
+  describe('getDiagnostics', () => {
+    it('should return correct diagnostics without store', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {
+          email: [createMockProvider('email-1', 'email')],
+          sms: [createMockProvider('sms-1', 'sms')],
+        },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const diag: NotificationDiagnostics = svc.getDiagnostics();
+
+      expect(diag.storageEnabled).toBe(false);
+      expect(diag.storageInitialized).toBe(false);
+      expect(diag.queueEnabled).toBe(false);
+      expect(diag.queueInitialized).toBe(false);
+      expect(diag.providers.email).toBe(1);
+      expect(diag.providers.sms).toBe(1);
+    });
+
+    it('should return correct diagnostics with store', async () => {
+      const mockStore = createMockStore();
+      const options: NotificationModuleOptions = {
+        providers: { email: [createMockProvider('email-1', 'email')] },
+        storage: { enabled: true, inject: 'MOCK_STORE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: NOTIFICATION_STORE, useValue: mockStore },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const diag: NotificationDiagnostics = svc.getDiagnostics();
+
+      expect(diag.storageEnabled).toBe(true);
+      expect(diag.storageInitialized).toBe(true);
+      expect(diag.providers.email).toBe(1);
+    });
+
+    it('should show storage enabled but not initialized when store missing', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, inject: 'NOTIFICATION_TYPEORM_STORE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const diag: NotificationDiagnostics = svc.getDiagnostics();
+
+      expect(diag.storageEnabled).toBe(true);
+      expect(diag.storageInitialized).toBe(false);
+    });
+
+    it('should return correct queue diagnostics', async () => {
+      const mockQueue = { add: jest.fn() };
+      const options: NotificationModuleOptions = {
+        providers: {},
+        queue: { enabled: true, inject: 'MOCK_QUEUE' },
+      };
+
+      const module: TestingModule = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: NOTIFICATION_QUEUE, useValue: mockQueue },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const diag: NotificationDiagnostics = svc.getDiagnostics();
+
+      expect(diag.queueEnabled).toBe(true);
+      expect(diag.queueInitialized).toBe(true);
+    });
+
+    it('should fallback to 0 when provider list is undefined', async () => {
+      const options: NotificationModuleOptions = {
+        providers: {
+          email: [createMockProvider('email-1', 'email')],
+          sms: undefined,
+        },
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const diag: NotificationDiagnostics = svc.getDiagnostics();
+
+      expect(diag.providers.sms).toBe(0);
+    });
+
+    it('should fallback to unknown provider name when provider has no name', async () => {
+      const namelessProvider = {
+        channel: 'email',
+        send: jest.fn().mockRejectedValue(new Error('Send failed')),
+      } as unknown as NotificationProvider;
+
+      const options: NotificationModuleOptions = {
+        providers: { email: [namelessProvider] },
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+
+      await expect(
+        svc.send('email', {
+          to: 'test@example.com',
+          subject: 'Test',
+          body: 'Hello',
+        }),
+      ).rejects.toThrow('Send failed');
+    });
+  });
+
+  describe('onModuleInit - non-Error useClass failure', () => {
+    it('should handle non-Error exception from useClass', async () => {
+      const mockModuleRef = {
+        create: jest.fn().mockRejectedValue('string error'),
+      };
+      const MockStoreClass = jest.fn();
+
+      const options: NotificationModuleOptions = {
+        providers: {},
+        storage: { enabled: true, useClass: MockStoreClass },
+      };
+
+      const module = await Test.createTestingModule({
+        providers: [
+          NotificationService,
+          { provide: NOTIFICATION_MODULE_OPTIONS, useValue: options },
+          { provide: ModuleRef, useValue: mockModuleRef },
+        ],
+      }).compile();
+
+      const svc = module.get(NotificationService);
+      const errorSpy = jest.spyOn(svc['logger'], 'error');
+
+      await svc.onModuleInit();
+
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to initialize notification store'),
+      );
+      expect(errorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('string error'),
+      );
     });
   });
 });

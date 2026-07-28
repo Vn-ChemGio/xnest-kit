@@ -1,35 +1,43 @@
-import { Inject, Injectable, Optional } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  Logger,
+  Optional,
+  OnModuleInit,
+} from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
 import {
   NOTIFICATION_MODULE_OPTIONS,
   NOTIFICATION_QUEUE,
   NOTIFICATION_STORE,
 } from '../shared/notification-keys';
-import type { NotificationProvider } from './notification.constants';
+import { CHANNELS, type NotificationProvider } from './notification.constants';
 import type {
   ChannelType,
   ChannelSendInput,
   ChannelResult,
+  DiscordSendInput,
+  EmailSendInput,
+  GoogleChatSendInput,
+  InAppSendInput,
+  LineSendInput,
+  NotificationDiagnostics,
   NotificationModuleOptions,
   NotificationRecord,
   NotificationResult,
   NotificationStore,
   ProviderSendResult,
+  PushSendInput,
   SendInput,
+  SlackSendInput,
+  SmsSendInput,
+  TeamsSendInput,
+  TelegramSendInput,
+  ViberSendInput,
+  WeChatSendInput,
+  WhatsAppSendInput,
+  WebPushSendInput,
 } from './notification.type';
-import type { EmailSendInput } from './channels/email';
-import type { SmsSendInput } from './channels/sms';
-import type { PushSendInput } from './channels/push';
-import type { TelegramSendInput } from './channels/telegram';
-import type { SlackSendInput } from './channels/slack';
-import type { TeamsSendInput } from './channels/teams';
-import type { GoogleChatSendInput } from './channels/googlechat';
-import type { WhatsAppSendInput } from './channels/whatsapp';
-import type { ViberSendInput } from './channels/viber';
-import type { LineSendInput } from './channels/line';
-import type { WebPushSendInput } from './channels/webpush';
-import type { InAppSendInput } from './channels/inapp';
-import type { DiscordSendInput } from './channels/discord';
-import type { WeChatSendInput } from './channels/wechat';
 
 /**
  * Core notification service.
@@ -56,17 +64,100 @@ import type { WeChatSendInput } from './channels/wechat';
  * ```
  */
 @Injectable()
-export class NotificationService {
+export class NotificationService implements OnModuleInit {
+  private readonly logger = new Logger(NotificationService.name);
+  private store?: NotificationStore;
+
   constructor(
     @Inject(NOTIFICATION_MODULE_OPTIONS)
     private readonly options: NotificationModuleOptions,
     @Optional()
     @Inject(NOTIFICATION_STORE)
-    private readonly store?: NotificationStore,
+    injectedStore?: NotificationStore,
     @Optional()
     @Inject(NOTIFICATION_QUEUE)
     private readonly queue?: unknown,
-  ) {}
+    private readonly moduleRef?: ModuleRef,
+  ) {
+    this.store = injectedStore;
+  }
+
+  /**
+   * Validate module initialization at startup.
+   *
+   * Logs warnings when storage or queue is enabled but the
+   * corresponding provider was not resolved. This makes
+   * misconfiguration visible immediately instead of silently
+   * failing on the first `send()` call.
+   *
+   * Also dynamically creates the store from `useClass` when it was
+   * provided inside a factory return (not registered as a top-level
+   * NestJS provider).
+   */
+  async onModuleInit(): Promise<void> {
+    // Dynamic store creation for useClass in factory-resolved options
+    if (
+      this.options.storage?.enabled &&
+      !this.store &&
+      this.options.storage.useClass &&
+      this.moduleRef
+    ) {
+      try {
+        this.store = (await this.moduleRef.create(
+          this.options.storage.useClass,
+        )) as NotificationStore;
+        this.logger.log('Notification store initialized via useClass');
+      } catch (error) {
+        this.logger.error(
+          'Failed to initialize notification store from useClass: ' +
+            (error instanceof Error ? error.message : String(error)),
+        );
+      }
+    }
+
+    if (this.options.storage?.enabled && !this.store) {
+      this.logger.warn(
+        'Notification storage is enabled but the store provider was not resolved. ' +
+          'Logs will NOT be persisted. Make sure the NOTIFICATION_STORE provider ' +
+          'is registered in your module.',
+      );
+    }
+
+    if (this.options.queue?.enabled && !this.queue) {
+      this.logger.warn(
+        'Notification queue is enabled but the queue provider was not resolved. ' +
+          'Notifications will be sent synchronously. Make sure the NOTIFICATION_QUEUE ' +
+          'provider is registered in your module.',
+      );
+    }
+  }
+
+  /**
+   * Return the current initialization status of the notification service.
+   *
+   * Useful for health-check endpoints or debugging module wiring.
+   *
+   * @returns Diagnostic object describing provider/store/queue status.
+   */
+  getDiagnostics(): NotificationDiagnostics {
+    const providers: Record<string, number> = {};
+    const channelProviders = this.options.providers as Record<
+      string,
+      unknown[] | undefined
+    >;
+
+    for (const [channel, list] of Object.entries(channelProviders)) {
+      providers[channel] = list?.length ?? 0;
+    }
+
+    return {
+      storageEnabled: this.options.storage?.enabled ?? false,
+      storageInitialized: this.store !== undefined && this.store !== null,
+      queueEnabled: this.options.queue?.enabled ?? false,
+      queueInitialized: this.queue !== undefined && this.queue !== null,
+      providers,
+    };
+  }
 
   /**
    * Send a notification through a single channel.
@@ -188,15 +279,35 @@ export class NotificationService {
       );
     }
 
-    const result = await this.sendToProviders(channel, payload, providers);
+    let result: ChannelResult;
+    let status: 'sent' | 'partial' | 'failed';
+    let providerError: unknown;
 
-    const allSuccess = result.results.every((r) => r.success);
-    const anySuccess = result.results.some((r) => r.success);
-    const status = allSuccess ? 'sent' : anySuccess ? 'partial' : 'failed';
+    try {
+      result = await this.sendToProviders(channel, payload, providers);
+      const allSuccess = result.results.every((r) => r.success);
+      const anySuccess = result.results.some((r) => r.success);
+      status = allSuccess ? 'sent' : anySuccess ? 'partial' : 'failed';
+    } catch (error) {
+      providerError = error;
+      result = {
+        channel,
+        results: [
+          {
+            channel,
+            success: false,
+            providerName: providers[0]?.name ?? 'unknown',
+            messageId: undefined,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        ],
+      };
+      status = 'failed';
+    }
 
     const notificationResult: NotificationResult = {
       id: undefined,
-      success: allSuccess,
+      success: status === 'sent',
       channels: [result],
       timestamp: new Date(),
     };
@@ -211,6 +322,7 @@ export class NotificationService {
       notificationResult.id = record.id;
     }
 
+    if (providerError) throw providerError;
     return notificationResult;
   }
 
@@ -251,10 +363,11 @@ export class NotificationService {
     }
 
     try {
-      /* eslint-disable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
-      const job = await (this.queue as any).add('notification', input);
-      return { queued: true, jobId: job.id as string | undefined };
-      /* eslint-enable @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
+      const queue = this.queue as {
+        add: (name: string, data: unknown) => Promise<{ id?: string }>;
+      };
+      const job = await queue.add('notification', input);
+      return { queued: true, jobId: job.id };
     } catch {
       return { queued: false };
     }
@@ -304,23 +417,7 @@ export class NotificationService {
   }
 
   private determineChannel(input: SendInput): ChannelType | undefined {
-    const channels: ChannelType[] = [
-      'email',
-      'sms',
-      'push',
-      'telegram',
-      'slack',
-      'teams',
-      'googlechat',
-      'whatsapp',
-      'viber',
-      'line',
-      'webpush',
-      'inapp',
-      'discord',
-      'wechat',
-    ];
-    for (const ch of channels) {
+    for (const ch of CHANNELS) {
       if ((input as Record<string, unknown>)[ch]) return ch;
     }
     return undefined;

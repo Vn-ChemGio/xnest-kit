@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 const mockGetWebPush = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -124,15 +123,17 @@ describe('WebPushProvider', () => {
       ttl: 3600,
     });
 
-    const payload = JSON.parse(mockSendNotification.mock.calls[0][1] as string);
+    const pushArgs = mockSendNotification.mock.calls[0] as [
+      string,
+      string,
+      Record<string, unknown>,
+    ];
+    const payload = JSON.parse(pushArgs[1]) as Record<string, unknown>;
     expect(payload.icon).toBe('https://example.com/icon.png');
     expect(payload.badge).toBe('https://example.com/badge.png');
     expect(payload.url).toBe('/page');
 
-    const options = mockSendNotification.mock.calls[0][2] as Record<
-      string,
-      unknown
-    >;
+    const options = pushArgs[2];
     expect(options.TTL).toBe(3600);
   });
 
@@ -152,10 +153,12 @@ describe('WebPushProvider', () => {
       body: 'Body',
     });
 
-    const options = mockSendNotification.mock.calls[0][2] as Record<
+    const pushArgs = mockSendNotification.mock.calls[0] as [
       string,
-      unknown
-    >;
+      string,
+      Record<string, unknown>,
+    ];
+    const options = pushArgs[2];
     expect(options.TTL).toBeUndefined();
   });
 

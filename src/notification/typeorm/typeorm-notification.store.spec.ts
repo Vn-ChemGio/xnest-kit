@@ -1,6 +1,7 @@
 import { TypeOrmNotificationStore } from './typeorm-notification.store';
 import type { Repository } from 'typeorm';
 import type { NotificationLogEntity } from './notification-log.entity';
+import type { ChannelType, ChannelResult } from '../notification.type';
 
 const mockCreate = jest.fn();
 const mockSave = jest.fn();
@@ -32,10 +33,12 @@ describe('TypeOrmNotificationStore', () => {
   describe('save', () => {
     it('should save a notification record', async () => {
       const inputRecord = {
-        channels: ['email'],
+        channels: ['email'] as ChannelType[],
         status: 'sent' as const,
-        results: [{ channel: 'email', results: [] }],
-        input: { email: { to: 'test@test.com', subject: 'Hi', body: 'Hello' } },
+        results: [{ channel: 'email', results: [] }] as ChannelResult[],
+        input: {
+          email: { to: 'test@test.com', subject: 'Hi', body: 'Hello' },
+        },
       };
 
       const savedEntity = {
@@ -62,9 +65,9 @@ describe('TypeOrmNotificationStore', () => {
 
     it('should serialize results and input as JSON', async () => {
       const inputRecord = {
-        channels: ['sms'],
+        channels: ['sms'] as ChannelType[],
         status: 'pending' as const,
-        results: [{ channel: 'sms', results: [] }],
+        results: [{ channel: 'sms', results: [] }] as ChannelResult[],
         input: { sms: { to: '+123', body: 'Hi' } },
       };
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Twilio SMS provider.
  *
@@ -8,13 +7,22 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { SmsSendInput } from './sms.channel';
 
 /** Lazy-loaded twilio reference. */
 const getTwilio = lazyImport<
-  (accountSid: string, authToken: string) => Record<string, unknown>
+  (
+    accountSid: string,
+    authToken: string,
+  ) => {
+    messages: {
+      create: (options: Record<string, unknown>) => Promise<{ sid: string }>;
+    };
+  }
 >('twilio', 'TwilioSmsProvider');
 
 /**
@@ -47,7 +55,11 @@ export class TwilioSmsProvider implements NotificationProvider<SmsSendInput> {
   readonly name = 'twilio';
   readonly channel = 'sms';
 
-  private client: any = null;
+  private client: {
+    messages: {
+      create: (options: Record<string, unknown>) => Promise<{ sid: string }>;
+    };
+  } | null = null;
 
   constructor(private readonly config: TwilioSmsProviderConfig) {}
 
@@ -76,7 +88,7 @@ export class TwilioSmsProvider implements NotificationProvider<SmsSendInput> {
         providerName: this.name,
         channel: this.channel,
 
-        messageId: message.sid as string,
+        messageId: message.sid,
       };
     } catch (err: unknown) {
       const errorMessage =

@@ -27,24 +27,11 @@ export {
   NOTIFICATION_MODULE_OPTIONS,
   NOTIFICATION_QUEUE,
   NOTIFICATION_STORE,
-  NOTIFICATION_EMAIL_PROVIDER,
-  NOTIFICATION_SMS_PROVIDER,
-  NOTIFICATION_PUSH_PROVIDER,
-  NOTIFICATION_TELEGRAM_PROVIDER,
-  NOTIFICATION_SLACK_PROVIDER,
-  NOTIFICATION_TEAMS_PROVIDER,
-  NOTIFICATION_GOOGLECHAT_PROVIDER,
-  NOTIFICATION_WHATSAPP_PROVIDER,
-  NOTIFICATION_VIBER_PROVIDER,
-  NOTIFICATION_LINE_PROVIDER,
-  NOTIFICATION_WEBPUSH_PROVIDER,
-  NOTIFICATION_INAPP_PROVIDER,
-  NOTIFICATION_DISCORD_PROVIDER,
-  NOTIFICATION_WECHAT_PROVIDER,
   notificationProviderToken,
 } from '../shared/notification-keys';
 
 // ── Constants & Provider interface ────────────────────────────────────────
+export { CHANNELS } from './notification.constants';
 export type {
   NotificationProvider,
   ProviderResult,
@@ -62,6 +49,7 @@ export type {
   NotificationStore,
   NotificationModuleOptions,
   NotificationModuleAsyncOptions,
+  NotificationDiagnostics,
 } from './notification.type';
 
 // ── Channel types ────────────────────────────────────────────────────────

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Firebase Cloud Messaging (FCM) push provider.
  *
@@ -8,11 +7,20 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { PushSendInput } from './push.channel';
 
-const getFirebaseAdmin = lazyImport<any>('firebase-admin', 'FcmPushProvider');
+const getFirebaseAdmin = lazyImport<{
+  initializeApp: (options: Record<string, unknown>) => void;
+  messaging: () => {
+    sendEachForMulticast: (message: Record<string, unknown>) => Promise<{
+      responses: Array<{ success: boolean; error?: { message: string } }>;
+    }>;
+  };
+}>('firebase-admin', 'FcmPushProvider');
 
 /**
  * Configuration for the FCM push provider.
@@ -97,12 +105,8 @@ export class FcmPushProvider implements NotificationProvider<PushSendInput> {
       };
 
       const response = await admin.messaging().sendEachForMulticast(message);
-      const allSuccess = response.responses.every(
-        (r: { success: boolean }) => r.success,
-      );
-      const anySuccess = response.responses.some(
-        (r: { success: boolean }) => r.success,
-      );
+      const allSuccess = response.responses.every((r) => r.success);
+      const anySuccess = response.responses.some((r) => r.success);
 
       if (allSuccess) {
         return {
@@ -115,11 +119,8 @@ export class FcmPushProvider implements NotificationProvider<PushSendInput> {
 
       if (anySuccess) {
         const errors = response.responses
-          .filter((r: { success: boolean }) => !r.success)
-          .map(
-            (r: { error?: { message: string } }) =>
-              r.error?.message ?? 'Unknown error',
-          );
+          .filter((r) => !r.success)
+          .map((r) => r.error?.message ?? 'Unknown error');
         return {
           success: false,
           providerName: this.name,
@@ -128,8 +129,7 @@ export class FcmPushProvider implements NotificationProvider<PushSendInput> {
         };
       }
 
-      const firstError = response.responses[0]?.error as
-        { message: string } | undefined;
+      const firstError = response.responses[0]?.error;
       return {
         success: false,
         providerName: this.name,

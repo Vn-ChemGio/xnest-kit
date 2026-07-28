@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Slack provider via Web API.
  *
@@ -8,13 +7,21 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { SlackSendInput } from './slack.channel';
 
 /** Lazy-loaded @slack/web-api reference. */
 const getSlackWebApi = lazyImport<
-  new (token: string) => Record<string, unknown>
+  new (token: string) => {
+    chat: {
+      postMessage: (
+        params: Record<string, unknown>,
+      ) => Promise<{ ok: boolean; ts: string }>;
+    };
+  }
 >('@slack/web-api', 'SlackProvider');
 
 /**
@@ -44,11 +51,23 @@ export class SlackProvider implements NotificationProvider<SlackSendInput> {
   readonly name = 'slack';
   readonly channel = 'slack';
 
-  private client: any = null;
+  private client: {
+    chat: {
+      postMessage: (
+        params: Record<string, unknown>,
+      ) => Promise<{ ok: boolean; ts: string }>;
+    };
+  } | null = null;
 
   constructor(private readonly config: SlackProviderConfig) {}
 
-  private getClient(): any {
+  private getClient(): {
+    chat: {
+      postMessage: (
+        params: Record<string, unknown>,
+      ) => Promise<{ ok: boolean; ts: string }>;
+    };
+  } {
     if (!this.client) {
       if (!isSlackWebApiInstalled()) {
         throw new Error(
@@ -101,7 +120,7 @@ export class SlackProvider implements NotificationProvider<SlackSendInput> {
         providerName: this.name,
         channel: this.channel,
 
-        messageId: result.ts as string,
+        messageId: result.ts,
       };
     } catch (err: unknown) {
       const errorMessage =

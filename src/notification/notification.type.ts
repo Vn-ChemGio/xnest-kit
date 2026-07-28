@@ -1,29 +1,39 @@
 import type { NotificationProvider } from './notification.constants';
-import type { EmailSendInput } from './channels/email/email.channel';
-import type { SmsSendInput } from './channels/sms/sms.channel';
-import type { PushSendInput } from './channels/push/push.channel';
-import type { TelegramSendInput } from './channels/telegram/telegram.channel';
-import type { SlackSendInput } from './channels/slack/slack.channel';
-import type { TeamsSendInput } from './channels/teams/teams.channel';
-import type { GoogleChatSendInput } from './channels/googlechat/googlechat.channel';
-import type { WhatsAppSendInput } from './channels/whatsapp/whatsapp.channel';
-import type { ViberSendInput } from './channels/viber/viber.channel';
-import type { LineSendInput } from './channels/line/line.channel';
-import type { WebPushSendInput } from './channels/webpush/webpush.channel';
-import type { InAppSendInput } from './channels/inapp/inapp.channel';
-import type { DiscordSendInput } from './channels/discord/discord.channel';
-import type { WeChatSendInput } from './channels/wechat/wechat.channel';
-import type { NodemailerEmailProviderConfig } from './channels/email/nodemailer.provider';
-import type { TwilioSmsProviderConfig } from './channels/sms/twilio.provider';
-import type { FcmPushProviderConfig } from './channels/push/fcm.provider';
-import type { TelegramBotProviderConfig } from './channels/telegram/telegram.provider';
-import type { SlackProviderConfig } from './channels/slack/slack.provider';
-import type { WhatsAppCloudProviderConfig } from './channels/whatsapp/whatsapp.provider';
-import type { ViberBotProviderConfig } from './channels/viber/viber.provider';
-import type { LineMessagingProviderConfig } from './channels/line/line.provider';
-import type { WebPushProviderConfig } from './channels/webpush/webpush.provider';
-import type { DiscordProviderConfig } from './channels/discord/discord.provider';
-import type { WeChatOfficialProviderConfig } from './channels/wechat/wechat.provider';
+import type {
+  EmailSendInput,
+  NodemailerEmailProviderConfig,
+} from './channels/email';
+import type { SmsSendInput, TwilioSmsProviderConfig } from './channels/sms';
+import type { PushSendInput, FcmPushProviderConfig } from './channels/push';
+import type {
+  TelegramSendInput,
+  TelegramBotProviderConfig,
+} from './channels/telegram';
+import type { SlackSendInput, SlackProviderConfig } from './channels/slack';
+import type { TeamsSendInput } from './channels/teams';
+import type { GoogleChatSendInput } from './channels/googlechat';
+import type {
+  WhatsAppSendInput,
+  WhatsAppCloudProviderConfig,
+} from './channels/whatsapp';
+import type { ViberSendInput, ViberBotProviderConfig } from './channels/viber';
+import type {
+  LineSendInput,
+  LineMessagingProviderConfig,
+} from './channels/line';
+import type {
+  WebPushSendInput,
+  WebPushProviderConfig,
+} from './channels/webpush';
+import type { InAppSendInput } from './channels/inapp';
+import type {
+  DiscordSendInput,
+  DiscordProviderConfig,
+} from './channels/discord';
+import type {
+  WeChatSendInput,
+  WeChatOfficialProviderConfig,
+} from './channels/wechat';
 
 /** Supported notification channel types. */
 export type ChannelType =
@@ -161,20 +171,20 @@ export interface NotificationModuleOptions {
     enabled: boolean;
     /** Injection token for the Bull/BullMQ queue instance. */
     inject?: string;
+    /** Class to instantiate as queue adapter (mutually exclusive with inject). */
+    useClass?: new (...args: unknown[]) => unknown;
   };
   storage?: {
     enabled: boolean;
     /** Injection token for a NotificationStore implementation. */
     inject?: string;
+    /** Class to instantiate as storage adapter (mutually exclusive with inject). */
+    useClass?: new (...args: unknown[]) => unknown;
   };
+  /** Additional modules to import into NotificationModule scope. */
+  imports?: unknown[];
   /** Register as global module. @default true */
   global?: boolean;
-  /** Default sender info per channel. */
-  defaultFrom?: {
-    email?: string;
-    sms?: string;
-    whatsapp?: string;
-  };
 }
 
 /** Async module configuration options. */
@@ -185,7 +195,26 @@ export interface NotificationModuleAsyncOptions {
   inject?: unknown[];
   imports?: unknown[];
   global?: boolean;
+  storage?: NotificationModuleOptions['storage'];
+  queue?: NotificationModuleOptions['queue'];
 }
+
+export type {
+  EmailSendInput,
+  SmsSendInput,
+  PushSendInput,
+  TelegramSendInput,
+  SlackSendInput,
+  TeamsSendInput,
+  GoogleChatSendInput,
+  WhatsAppSendInput,
+  ViberSendInput,
+  LineSendInput,
+  WebPushSendInput,
+  InAppSendInput,
+  DiscordSendInput,
+  WeChatSendInput,
+};
 
 /**
  * Union of all channel-specific send inputs.
@@ -229,4 +258,22 @@ export interface SendInput {
   inapp?: InAppSendInput;
   discord?: DiscordSendInput;
   wechat?: WeChatSendInput;
+}
+
+/**
+ * Diagnostic snapshot returned by `NotificationService.getDiagnostics()`.
+ *
+ * Useful for health-check endpoints or debugging module wiring issues.
+ */
+export interface NotificationDiagnostics {
+  /** Whether storage persistence is enabled in module options. */
+  storageEnabled: boolean;
+  /** Whether the store provider was successfully resolved and injected. */
+  storageInitialized: boolean;
+  /** Whether queue-based delivery is enabled in module options. */
+  queueEnabled: boolean;
+  /** Whether the queue provider was successfully resolved and injected. */
+  queueInitialized: boolean;
+  /** Map of channel name to configured provider count. */
+  providers: Record<string, number>;
 }

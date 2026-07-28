@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access */
 const mockGetDiscordJs = jest.fn();
 
 jest.mock('../../../utils', () => ({
@@ -125,10 +124,15 @@ describe('DiscordProvider', () => {
         },
       });
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const fetchArgs = mockFetch.mock.calls[0] as [string, { body: string }];
+      const body = JSON.parse(fetchArgs[1].body) as Record<string, unknown>;
       expect(body.embeds).toHaveLength(1);
-      expect(body.embeds[0].title).toBe('Embed Title');
-      expect(body.embeds[0].color).toBe(0xff0000);
+      expect((body.embeds as Record<string, unknown>[])[0].title).toBe(
+        'Embed Title',
+      );
+      expect((body.embeds as Record<string, unknown>[])[0].color).toBe(
+        0xff0000,
+      );
     });
 
     it('should send with username and avatar via webhook', async () => {
@@ -142,7 +146,8 @@ describe('DiscordProvider', () => {
         avatarUrl: 'https://example.com/avatar.png',
       });
 
-      const body = JSON.parse(mockFetch.mock.calls[0][1].body as string);
+      const fetchArgs = mockFetch.mock.calls[0] as [string, { body: string }];
+      const body = JSON.parse(fetchArgs[1].body) as Record<string, unknown>;
       expect(body.username).toBe('Bot');
       expect(body.avatar_url).toBe('https://example.com/avatar.png');
     });
@@ -223,6 +228,7 @@ describe('DiscordProvider', () => {
       expect(result.success).toBe(true);
       expect(mockSend).toHaveBeenCalledWith(
         expect.objectContaining({
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           embeds: expect.arrayContaining([
             expect.objectContaining({ title: 'Embed Title' }),
           ]),

@@ -1,12 +1,28 @@
 /**
- * Core types for notification providers.
+ * Core types and constants for the notification module.
  *
  * @module
  */
 
-/**
- * Result from a single provider send attempt.
- */
+/** All supported notification channel names. */
+export const CHANNELS = [
+  'email',
+  'sms',
+  'push',
+  'telegram',
+  'slack',
+  'teams',
+  'googlechat',
+  'whatsapp',
+  'viber',
+  'line',
+  'webpush',
+  'inapp',
+  'discord',
+  'wechat',
+] as const;
+
+/** Result from a single provider send attempt. */
 export interface ProviderResult {
   success: boolean;
   providerName: string;
@@ -19,15 +35,12 @@ export interface ProviderResult {
 /**
  * Base interface for notification providers.
  *
- * Implement this to create a custom notification provider
- * (e.g., SendGrid, Twilio, FCM, etc.).
+ * Implement this to create a custom notification provider.
  *
  * @typeParam T - The input type for this provider's channel.
  *
  * @example
  * ```typescript
- * import type { NotificationProvider } from 'xnest-kit/notification';
- *
  * class SendGridEmailProvider implements NotificationProvider<EmailSendInput> {
  *   readonly name = 'sendgrid';
  *   readonly channel = 'email' as const;

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access */
 /**
  * Web Push (VAPID) provider.
  *
@@ -8,11 +7,24 @@
  */
 
 import { lazyImport, isPackageInstalled } from '../../../utils';
-import type { NotificationProvider } from '../../notification.constants';
-import type { ProviderResult } from '../../notification.constants';
+import type {
+  NotificationProvider,
+  ProviderResult,
+} from '../../notification.constants';
 import type { WebPushSendInput } from './webpush.channel';
 
-const getWebPush = lazyImport<any>('web-push', 'WebPushProvider');
+const getWebPush = lazyImport<{
+  setVapidDetails: (
+    subject: string,
+    publicKey: string,
+    privateKey: string,
+  ) => void;
+  sendNotification: (
+    endpoint: string,
+    payload: string,
+    options?: Record<string, unknown>,
+  ) => Promise<{ statusCode: number }>;
+}>('web-push', 'WebPushProvider');
 
 /**
  * Configuration for the Web Push provider.
@@ -93,7 +105,7 @@ export class WebPushProvider implements NotificationProvider<WebPushSendInput> {
         success: true,
         providerName: this.name,
         channel: this.channel,
-        messageId: `webpush-${result.statusCode as number}`,
+        messageId: `webpush-${result.statusCode}`,
       };
     } catch (err: unknown) {
       const errorMessage =
