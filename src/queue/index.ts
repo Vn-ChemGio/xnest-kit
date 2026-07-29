@@ -1,55 +1,42 @@
 /**
  * @module xnest-kit/queue
- * @description Queue utilities for NestJS with BullMQ.
- * Provides quick configuration for BullMQ and queue decorators.
+ * @description Queue utilities for NestJS with BullMQ via @nestjs/bullmq.
+ *
+ * Provides centralized queue configuration, multi-connection support,
+ * and decorator-friendly queue/flow registration.
  *
  * @example
  * ```typescript
- * import { configQueue } from 'xnest-kit/queue';
+ * import { QueueModule } from 'xnest-kit/queue';
  *
- * const app = await NestFactory.create(AppModule);
- * configQueue(app, { redis: { host: 'localhost', port: 6379 } });
+ * @Module({
+ *   imports: [
+ *     QueueModule.forRoot({
+ *       connections: [{ url: 'redis://localhost:6379' }],
+ *       queues: [{ name: 'email' }],
+ *     }),
+ *   ],
+ * })
+ * export class AppModule {}
  * ```
  */
 
-import { Module } from '@nestjs/common';
+import { isPackageInstalled } from '../utils';
 
-/**
- * Stub: Queue module.
- * @description Will provide BullMQ configuration and queue decorators.
- * @throws {Error} Not yet implemented.
- */
-@Module({})
-export class QueueModule {
-  constructor() {
-    throw new Error(
-      '[xnest-kit/queue] QueueModule is not yet implemented. Coming in v0.1.0-alpha.',
-    );
-  }
-}
-
-/**
- * Stub: Configure BullMQ queues for a NestJS application.
- * @param _app - The NestJS application instance.
- * @param _options - BullMQ configuration options (redis, defaultJobOptions, etc.).
- * @throws {Error} Not yet implemented.
- */
-export function configQueue(
-  _app?: never,
-  _options?: Record<string, unknown>,
-): never {
+if (!isPackageInstalled('@nestjs/bullmq')) {
   throw new Error(
-    '[xnest-kit/queue] configQueue() is not yet implemented. Coming in v0.1.0-alpha.',
+    'xnest-kit/queue requires @nestjs/bullmq to be installed. Run: npm install @nestjs/bullmq',
   );
 }
 
-/**
- * Stub: Decorator for defining a BullMQ processor.
- * @param _queueName - The name of the queue to process.
- * @throws {Error} Not yet implemented.
- */
-export function XProcessor(_queueName?: string): ClassDecorator {
-  throw new Error(
-    '[xnest-kit/queue] XProcessor decorator is not yet implemented. Coming in v0.1.0-alpha.',
-  );
-}
+export { configQueue } from './config/config-queue';
+export { parseQueueUrls } from './config/parse-queue-urls';
+export { QueueModule } from './queue.module';
+export { QUEUE_PRIMARY, QUEUE_ALL } from '../shared/queue-keys';
+export type {
+  QueueConnectionConfig,
+  QueueRegisterConfig,
+  FlowProducerRegisterConfig,
+  ConfigQueueOptions,
+  ResolvedQueueConfig,
+} from './types';
